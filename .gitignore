@@ -5,3 +5,4 @@ meteotinder_dataloader.egg-info
 *.egg-info
 .tox
 .coverage
+coverage.xml
