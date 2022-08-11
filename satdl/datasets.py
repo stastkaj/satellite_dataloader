@@ -1,29 +1,35 @@
+from typing import Any, Dict, List, Tuple
 from collections import defaultdict
 from functools import lru_cache
 import logging
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 from trollsift import Parser
-from typing import Any, Dict, List, Tuple
 import xarray as xr
 
 from .utils import image2xr
+
 
 _logger = logging.getLogger(__name__)
 
 
 def _get_get_image(georef):
-
     def _get_image(path):
-        _logger.debug(f'loading georeferenced image {path}')
+        _logger.debug(f"loading georeferenced image {path}")
         return image2xr(path, georef=georef).load()
 
     return _get_image
 
 
 class StaticImageFolderDataset:
-    def __init__(self, base_folder: str or Path, file_mask: str or Parser,
-                 georef: str or Path or xr.DataArray = None, max_cache=0) -> None:
+    def __init__(
+        self,
+        base_folder: str or Path,
+        file_mask: str or Parser,
+        georef: str or Path or xr.DataArray = None,
+        max_cache=0,
+    ) -> None:
         """Create ImageFolderDataset
 
         Note: content of the folder is scanned only once, at the class creation
@@ -40,7 +46,7 @@ class StaticImageFolderDataset:
         """
         self._base_folder = Path(base_folder)
         if not self._base_folder.exists():
-            raise ValueError(f'base folder {base_folder} does not exist')
+            raise ValueError(f"base folder {base_folder} does not exist")
         self._file_mask = Parser(file_mask)
         self._georef = georef  # TODO: validate georeference
         self._files = list(self._base_folder.rglob(self._file_mask.globify()))
@@ -91,17 +97,23 @@ class StaticImageFolderDataset:
     def __iter__(self):
         return (key for key in self.keys())
 
-    def groupby(self, attr_name: str, sortby: str or None or List[str] = None,
-                ascending: bool = True) -> "GroupedDataset":
+    def groupby(
+        self, attr_name: str, sortby: str or None or List[str] = None, ascending: bool = True
+    ) -> "GroupedDataset":
         sortby = sortby or []
         if isinstance(sortby, str):
             sortby = [sortby]
         groups = defaultdict(lambda: [])
-        for key, attrs in sorted(self.attrs.items(), key=lambda x: tuple(x[1][sort_col] for sort_col in sortby),
-                                 reverse=not ascending):
+        for key, attrs in sorted(
+            self.attrs.items(),
+            key=lambda x: tuple(x[1][sort_col] for sort_col in sortby),
+            reverse=not ascending,
+        ):
             groups[attrs.get(attr_name)].append(key)
 
-        return GroupedDataset(self, key_groups=groups.values(), shared_attrs=({attr_name: k} for k in groups.keys()))
+        return GroupedDataset(
+            self, key_groups=groups.values(), shared_attrs=({attr_name: k} for k in groups.keys())
+        )
 
 
 class GroupedDataset:
@@ -111,8 +123,10 @@ class GroupedDataset:
         self._shared_attrs = tuple(shared_attrs)
 
         if len(self._key_groups) != len(self._shared_attrs):
-            raise ValueError(f'len(key_groups) != len(shared_attrs): '
-                             f'{len(self._key_groups)} != {len(self._shared_attrs)}')
+            raise ValueError(
+                f"len(key_groups) != len(shared_attrs): "
+                f"{len(self._key_groups)} != {len(self._shared_attrs)}"
+            )
 
     def __len__(self):
         return len(self._key_groups)
