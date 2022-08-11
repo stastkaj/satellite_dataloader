@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, List, Optional, Union
 from pathlib import Path
 
 import numpy as np
@@ -52,3 +52,16 @@ def image2xr(
         raise ValueError(f"cannot georeference image {path}")
 
     return da
+
+
+def tolist(x: Any, none_as_empty_list: bool = True) -> List[Any]:
+    """Convert to list."""
+    if none_as_empty_list and x is None:
+        return []
+
+    if isinstance(x, list):
+        return x
+    elif isinstance(x, tuple):
+        return list(x)
+    else:
+        return [x]

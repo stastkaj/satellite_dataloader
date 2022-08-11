@@ -1,4 +1,20 @@
-from typing import Any, Callable, Dict, Generator, Iterable, KeysView, List, Optional, Sequence, Tuple, Union
+from __future__ import annotations
+
+from typing import (
+    Any,
+    Callable,
+    Container,
+    Dict,
+    Generator,
+    ItemsView,
+    Iterable,
+    KeysView,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Union,
+)
 from collections import defaultdict
 from functools import lru_cache
 import logging
@@ -8,7 +24,7 @@ import numpy as np
 from trollsift import Parser
 import xarray as xr
 
-from .utils import image2xr
+from satdl.utils import image2xr, tolist
 
 
 _logger = logging.getLogger(__name__)
@@ -24,7 +40,7 @@ def _get_get_image(
     return _get_image
 
 
-class StaticImageFolderDataset:
+class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
     def __init__(
         self,
         base_folder: Union[str, Path],
@@ -77,9 +93,9 @@ class StaticImageFolderDataset:
         """Return dict {key: attrs_dict}"""
         return self._attrs
 
-    def items(self) -> List[Tuple[str, Any]]:
+    def items(self) -> ItemsView[str, xr.DataArray]:
         """Return list of (key, attributes) pairs"""
-        return [(key, self[key]) for key in self.keys()]
+        return dict((key, self[key]) for key in self.keys()).items()
 
     def __getitem__(self, key: str) -> xr.DataArray:
         """Return image as DataArray from key"""
@@ -102,32 +118,56 @@ class StaticImageFolderDataset:
     def __iter__(self) -> Generator[str, None, None]:
         return (key for key in self.keys())
 
+    def __contains__(self, key: Any) -> bool:
+        return key in self._attrs
+
     def groupby(
         self, attr_name: str, sortby: Optional[Union[str, List[str]]] = None, ascending: bool = True
     ) -> "GroupedDataset":
+        """Split dataset by a value of an attribute.
+
+        Parameters
+        ----------
+        attr_name: str
+            Name of the attribute used for splitting.
+        sortby: str, list of str, optional
+            Sort each group by the values of these attributes.
+        ascending: bool
+            Sort in ascending order?
+        """
         sortby = sortby or []
         if isinstance(sortby, str):
             sortby = [sortby]
+
+        if sortby:
+            sort_fun = sorted
+        else:
+
+            def sort_fun(x: Any, *args: Any, **kwargs: Any) -> Any:  # noqa: U100
+                return x
+
+        # build dict {attribute_value: sorted_list_of_keys_in_this_group}
         groups = defaultdict(lambda: [])
-        for key, key_attrs in sorted(
+        for key, key_attrs in sort_fun(
             self.attrs.items(),
             key=lambda x: tuple(x[1][sort_col] for sort_col in sortby),  # type: ignore
             reverse=not ascending,
         ):
             groups[key_attrs.get(attr_name)].append(key)
 
+        # return object representing the dataset split
         return GroupedDataset(
-            self, key_groups=groups.values(), shared_attrs=tuple({attr_name: k} for k in groups.keys())
+            self, key_groups=groups.values(), group_attrs=tuple({attr_name: k} for k in groups.keys())
         )
 
 
 class GroupedDataset:
     def __init__(
         self,
-        parent: StaticImageFolderDataset,
+        parent: Mapping[str, Any],
         key_groups: Iterable[List[str]],
-        shared_attrs: Sequence[Dict[str, Any]],
-    ):  # TODO: StaticImageFolderDataset -> some more generic type
+        group_attrs: Sequence[Dict[str, Any]],
+    ):
         """Dataset representing items from a parent dataset grouped by some condition.
 
         Usage:
@@ -140,30 +180,101 @@ class GroupedDataset:
         parent: The parent dataset.
         key_groups: Iterable of lists of parent keys. Each list represents one group and contains
             all keys that belong to that group.
-        shared_attrs: Enumeration of attributes that defined the groups.
+        group_attrs: Enumeration of attributes that defined the groups.
             E.g. [{product: 'IR108', date: '20201018}, {product: 'HRV', date: '20201018'},
                   {product: 'IR108', data: '20201019}]
         """
         self._parent = parent
         self._key_groups = list(key_groups)
-        self._shared_attrs = list(shared_attrs)
+        self._group_attrs = list(group_attrs)
 
-        if len(self._key_groups) != len(self._shared_attrs):
+        if len(self._key_groups) != len(self._group_attrs):
             raise ValueError(
-                f"len(key_groups) != len(shared_attrs): "
-                f"{len(self._key_groups)} != {len(self._shared_attrs)}"
+                f"len(key_groups) != len(group_attrs): "
+                f"{len(self._key_groups)} != {len(self._group_attrs)}"
             )
 
     def __len__(self) -> int:
         return len(self._key_groups)
 
     def __getitem__(self, i: int) -> Generator[xr.DataArray, Any, Any]:
-        """Get all elements of i-th group"""
+        """Get all elements of the i-th group."""
         return (self._parent[key] for key in self._key_groups[i])
 
     @property
     def attrs(self) -> List[Dict[str, Any]]:
-        return self._shared_attrs
+        return self._group_attrs
 
     def __iter__(self) -> Generator[Generator[xr.DataArray, None, None], None, None]:
         return (self[i] for i in range(len(self)))
+
+    def filter(
+        self,
+        requested_groups: Optional[List[Dict[str, Any]]] = None,
+        forbidden_groups: Optional[List[Dict[str, Any]]] = None,
+        requested_attrs: Optional[Dict[str, Union[Any, Container[Any]]]] = None,
+        forbidden_attrs: Optional[Dict[str, Union[Any, Container[Any]]]] = None,
+    ) -> GroupedDataset:
+        """Filter groups by the value of their attributes.
+
+        Parameters
+        ----------
+        requested_groups: Return only groups with specified attributes and their values. Tests exact match of
+            attribute dictionaries. Cannot be used simultaneously with forbidden_groups.
+        forbidden_groups: Remove all groups with specified attributes and their values. Tests exact match of
+            attribute dictionaries. Cannot be used simultaneously with requested_groups.
+        requested_attrs: Return only groups whose attributes have values specified here. Each specified
+            attribute must have one of the requested values.
+        forbidden_attrs: Remove groups whose attributes have values specified here. Group is removed if any
+            of the specified attributes has a forbidden value.
+
+        Returns
+        -------
+        GroupedDataset
+        """
+        if all(
+            param is None for param in [requested_groups, forbidden_groups, requested_attrs, forbidden_attrs]
+        ):
+            # no filter set
+            return self
+
+        if requested_groups is not None and forbidden_groups is not None:
+            raise ValueError("Cannot use `requested_groups` and `forbidden_groups` at the same time.")
+
+        requested_groups = requested_groups or []
+        forbidden_groups = forbidden_groups or []
+        requested_attrs = requested_attrs or {}
+        forbidden_attrs = forbidden_attrs or {}
+
+        requested_attrs = {k: tolist(v) for k, v in requested_attrs.items()}
+        forbidden_attrs = {k: tolist(v) for k, v in forbidden_attrs.items()}
+
+        filtered_group_attrs = []
+        filtered_key_groups = []
+        for group_attr, group_of_keys in zip(self._group_attrs, self._key_groups):
+            if any(forbidden_group == group_attr for forbidden_group in forbidden_groups):
+                # this group is forbidden
+                continue
+
+            if requested_groups and not any(
+                allowed_group == group_attr for allowed_group in requested_groups
+            ):
+                # this group is not requested
+                continue
+
+            if any(
+                attr in group_attr and group_attr[attr] in values for attr, values in forbidden_attrs.items()
+            ):
+                # this group contains forbidden value of an attribute
+                continue
+
+            if requested_attrs and not all(
+                attr in group_attr and group_attr[attr] in values for attr, values in requested_attrs.items()
+            ):
+                # this group does not contain a requested value of an attribute
+                continue
+
+            filtered_group_attrs.append(group_attr)
+            filtered_key_groups.append(group_of_keys)
+
+        return GroupedDataset(self._parent, key_groups=filtered_key_groups, group_attrs=filtered_group_attrs)
