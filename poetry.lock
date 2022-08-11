@@ -1,0 +1,1024 @@
+[[package]]
+name = "affine"
+version = "2.3.1"
+description = "Matrices describing affine transformation of the plane."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+test = ["pytest (>=4.6)", "pytest-cov", "pydocstyle", "flake8", "coveralls"]
+
+[[package]]
+name = "appdirs"
+version = "1.4.4"
+description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "asciitree"
+version = "0.3.3"
+description = "Draws ASCII trees."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "atomicwrites"
+version = "1.4.1"
+description = "Atomic file writes."
+category = "dev"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
+name = "attrs"
+version = "22.1.0"
+description = "Classes Without Boilerplate"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.extras]
+dev = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope-interface", "furo", "sphinx", "sphinx-notfound-page", "pre-commit", "cloudpickle"]
+docs = ["furo", "sphinx", "zope-interface", "sphinx-notfound-page"]
+tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "zope-interface", "cloudpickle"]
+tests_no_zope = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "mypy (>=0.900,!=0.940)", "pytest-mypy-plugins", "cloudpickle"]
+
+[[package]]
+name = "autoflake"
+version = "1.4"
+description = "Removes unused imports and unused variables"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pyflakes = ">=1.1.0"
+
+[[package]]
+name = "black"
+version = "22.6.0"
+description = "The uncompromising code formatter."
+category = "dev"
+optional = false
+python-versions = ">=3.6.2"
+
+[package.dependencies]
+click = ">=8.0.0"
+mypy-extensions = ">=0.4.3"
+pathspec = ">=0.9.0"
+platformdirs = ">=2"
+tomli = {version = ">=1.1.0", markers = "python_full_version < \"3.11.0a7\""}
+typing-extensions = {version = ">=3.10.0.0", markers = "python_version < \"3.10\""}
+
+[package.extras]
+colorama = ["colorama (>=0.4.3)"]
+d = ["aiohttp (>=3.7.4)"]
+jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
+uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
+name = "certifi"
+version = "2022.6.15"
+description = "Python package for providing Mozilla's CA Bundle."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "charset-normalizer"
+version = "2.1.0"
+description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
+category = "main"
+optional = false
+python-versions = ">=3.6.0"
+
+[package.extras]
+unicode_backport = ["unicodedata2"]
+
+[[package]]
+name = "click"
+version = "8.1.3"
+description = "Composable command line interface toolkit"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[[package]]
+name = "click-plugins"
+version = "1.1.1"
+description = "An extension module for click to enable registering CLI commands via setuptools entry-points."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+click = ">=4.0"
+
+[package.extras]
+dev = ["coveralls", "wheel", "pytest-cov", "pytest (>=3.6)"]
+
+[[package]]
+name = "cligj"
+version = "0.7.2"
+description = "Click params for commmand line interfaces to GeoJSON"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, <4"
+
+[package.dependencies]
+click = ">=4.0"
+
+[package.extras]
+test = ["pytest-cov"]
+
+[[package]]
+name = "cloudpickle"
+version = "2.1.0"
+description = "Extended pickling support for Python objects"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "colorama"
+version = "0.4.5"
+description = "Cross-platform colored terminal text."
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[[package]]
+name = "configobj"
+version = "5.0.6"
+description = "Config file reading, writing and validation."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+six = "*"
+
+[[package]]
+name = "coverage"
+version = "6.4.3"
+description = "Code coverage measurement for Python"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+tomli = {version = "*", optional = true, markers = "python_full_version <= \"3.11.0a6\" and extra == \"toml\""}
+
+[package.extras]
+toml = ["tomli"]
+
+[[package]]
+name = "dask"
+version = "2022.8.0"
+description = "Parallel PyData with Task Scheduling"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+cloudpickle = ">=1.1.1"
+fsspec = ">=0.6.0"
+numpy = {version = ">=1.18", optional = true, markers = "extra == \"array\""}
+packaging = ">=20.0"
+partd = ">=0.3.10"
+pyyaml = ">=5.3.1"
+toolz = ">=0.8.2"
+
+[package.extras]
+array = ["numpy (>=1.18)"]
+complete = ["bokeh (>=2.4.2)", "distributed (==2022.8.0)", "jinja2", "numpy (>=1.18)", "pandas (>=1.0)"]
+dataframe = ["numpy (>=1.18)", "pandas (>=1.0)"]
+diagnostics = ["bokeh (>=2.4.2)", "jinja2"]
+distributed = ["distributed (==2022.8.0)"]
+test = ["pandas", "pytest", "pytest-rerunfailures", "pytest-xdist", "pre-commit"]
+
+[[package]]
+name = "donfig"
+version = "0.7.0"
+description = "Python package for configuring a python package"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+pyyaml = "*"
+
+[[package]]
+name = "entrypoints"
+version = "0.4"
+description = "Discover and load entry points from installed packages."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "fasteners"
+version = "0.17.3"
+description = "A python package that provides useful locks"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "flake8"
+version = "5.0.4"
+description = "the modular source code checker: pep8 pyflakes and co"
+category = "dev"
+optional = false
+python-versions = ">=3.6.1"
+
+[package.dependencies]
+mccabe = ">=0.7.0,<0.8.0"
+pycodestyle = ">=2.9.0,<2.10.0"
+pyflakes = ">=2.5.0,<2.6.0"
+
+[[package]]
+name = "flake8-black"
+version = "0.3.3"
+description = "flake8 plugin to call black as a code style validator"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+black = ">=22.1.0"
+flake8 = ">=3.0.0"
+tomli = "*"
+
+[[package]]
+name = "flake8-isort"
+version = "4.2.0"
+description = "flake8 plugin that integrates isort ."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+flake8 = ">=3.2.1,<6"
+isort = ">=4.3.5,<6"
+
+[package.extras]
+test = ["pytest-cov"]
+
+[[package]]
+name = "flake8-unused-arguments"
+version = "0.0.11"
+description = "flake8 extension to warn on unused function arguments"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+flake8 = ">3.0.0"
+
+[[package]]
+name = "fsspec"
+version = "2022.7.1"
+description = "File-system specification"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+abfs = ["adlfs"]
+adl = ["adlfs"]
+arrow = ["pyarrow (>=1)"]
+dask = ["dask", "distributed"]
+dropbox = ["dropboxdrivefs", "requests", "dropbox"]
+entrypoints = ["importlib-metadata"]
+fuse = ["fusepy"]
+gcs = ["gcsfs"]
+git = ["pygit2"]
+github = ["requests"]
+gs = ["gcsfs"]
+gui = ["panel"]
+hdfs = ["pyarrow (>=1)"]
+http = ["requests", "aiohttp"]
+libarchive = ["libarchive-c"]
+oci = ["ocifs"]
+s3 = ["s3fs"]
+sftp = ["paramiko"]
+smb = ["smbprotocol"]
+ssh = ["paramiko"]
+tqdm = ["tqdm"]
+
+[[package]]
+name = "idna"
+version = "3.3"
+description = "Internationalized Domain Names in Applications (IDNA)"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
+name = "iniconfig"
+version = "1.1.1"
+description = "iniconfig: brain-dead simple config-ini parsing"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "isort"
+version = "5.10.1"
+description = "A Python utility / library to sort Python imports."
+category = "dev"
+optional = false
+python-versions = ">=3.6.1,<4.0"
+
+[package.extras]
+pipfile_deprecated_finder = ["pipreqs", "requirementslib"]
+requirements_deprecated_finder = ["pipreqs", "pip-api"]
+colors = ["colorama (>=0.4.3,<0.5.0)"]
+plugins = ["setuptools"]
+
+[[package]]
+name = "locket"
+version = "1.0.0"
+description = "File-based locks for Python on Linux and Windows"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
+name = "mccabe"
+version = "0.7.0"
+description = "McCabe checker, plugin for flake8"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "mypy"
+version = "0.971"
+description = "Optional static typing for Python"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+mypy-extensions = ">=0.4.3"
+tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
+typing-extensions = ">=3.10"
+
+[package.extras]
+dmypy = ["psutil (>=4.0)"]
+python2 = ["typed-ast (>=1.4.0,<2)"]
+reports = ["lxml"]
+
+[[package]]
+name = "mypy-extensions"
+version = "0.4.3"
+description = "Experimental type system extensions for programs checked with the mypy typechecker."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "numcodecs"
+version = "0.10.2"
+description = "A Python package providing buffer compression and transformation codecs for use in data storage and communication applications."
+category = "main"
+optional = false
+python-versions = ">=3.7, <4"
+
+[package.dependencies]
+entrypoints = "*"
+numpy = ">=1.7"
+typing-extensions = ">=3.7.4"
+
+[package.extras]
+msgpack = ["msgpack"]
+
+[[package]]
+name = "numpy"
+version = "1.23.1"
+description = "NumPy is the fundamental package for array computing with Python."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[[package]]
+name = "packaging"
+version = "21.3"
+description = "Core utilities for Python packages"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+pyparsing = ">=2.0.2,<3.0.5 || >3.0.5"
+
+[[package]]
+name = "pandas"
+version = "1.4.3"
+description = "Powerful data structures for data analysis, time series, and statistics"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+numpy = [
+    {version = ">=1.18.5", markers = "platform_machine != \"aarch64\" and platform_machine != \"arm64\" and python_version < \"3.10\""},
+    {version = ">=1.19.2", markers = "platform_machine == \"aarch64\" and python_version < \"3.10\""},
+    {version = ">=1.20.0", markers = "platform_machine == \"arm64\" and python_version < \"3.10\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
+]
+python-dateutil = ">=2.8.1"
+pytz = ">=2020.1"
+
+[package.extras]
+test = ["hypothesis (>=5.5.3)", "pytest (>=6.0)", "pytest-xdist (>=1.31)"]
+
+[[package]]
+name = "partd"
+version = "1.2.0"
+description = "Appendable key-value storage"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[package.dependencies]
+locket = "*"
+toolz = "*"
+
+[package.extras]
+complete = ["blosc", "pyzmq", "pandas (>=0.19.0)", "numpy (>=1.9.0)"]
+
+[[package]]
+name = "pathspec"
+version = "0.9.0"
+description = "Utility library for gitignore style pattern matching of file paths."
+category = "dev"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+
+[[package]]
+name = "pillow"
+version = "9.2.0"
+description = "Python Imaging Library (Fork)"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["furo", "olefile", "sphinx (>=2.4)", "sphinx-copybutton", "sphinx-issues (>=3.0.1)", "sphinx-removed-in", "sphinxext-opengraph"]
+tests = ["check-manifest", "coverage", "defusedxml", "markdown2", "olefile", "packaging", "pyroma", "pytest", "pytest-cov", "pytest-timeout"]
+
+[[package]]
+name = "platformdirs"
+version = "2.5.2"
+description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["furo (>=2021.7.5b38)", "proselint (>=0.10.2)", "sphinx-autodoc-typehints (>=1.12)", "sphinx (>=4)"]
+test = ["appdirs (==1.4.4)", "pytest-cov (>=2.7)", "pytest-mock (>=3.6)", "pytest (>=6)"]
+
+[[package]]
+name = "pluggy"
+version = "1.0.0"
+description = "plugin and hook calling mechanisms for python"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+testing = ["pytest-benchmark", "pytest"]
+dev = ["tox", "pre-commit"]
+
+[[package]]
+name = "pooch"
+version = "1.6.0"
+description = "\"Pooch manages your Python library's sample data files: it automatically downloads and stores them in a local directory, with support for versioning and corruption checks.\""
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+appdirs = ">=1.3.0"
+packaging = ">=20.0"
+requests = ">=2.19.0"
+
+[package.extras]
+xxhash = ["xxhash (>=1.4.3)"]
+sftp = ["paramiko (>=2.7.0)"]
+progress = ["tqdm (>=4.41.0,<5.0.0)"]
+
+[[package]]
+name = "py"
+version = "1.11.0"
+description = "library with cross-python path, ini-parsing, io, code, log facilities"
+category = "dev"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[[package]]
+name = "pycodestyle"
+version = "2.9.1"
+description = "Python style guide checker"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "pyflakes"
+version = "2.5.0"
+description = "passive checker of Python programs"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "pykdtree"
+version = "1.3.5"
+description = "Fast kd-tree implementation with OpenMP-enabled queries"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
+name = "pyorbital"
+version = "1.7.3"
+description = "Orbital parameters and astronomical computations in Python"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+numpy = ">=1.19.0"
+requests = "*"
+scipy = "*"
+
+[[package]]
+name = "pyparsing"
+version = "3.0.9"
+description = "pyparsing module - Classes and methods to define and execute parsing grammars"
+category = "main"
+optional = false
+python-versions = ">=3.6.8"
+
+[package.extras]
+diagrams = ["railroad-diagrams", "jinja2"]
+
+[[package]]
+name = "pyproj"
+version = "3.3.1"
+description = "Python interface to PROJ (cartographic projections and coordinate transformations library)"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+certifi = "*"
+
+[[package]]
+name = "pyresample"
+version = "1.25.1"
+description = "Geospatial image resampling in Python"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+configobj = "*"
+numpy = ">=1.10.0"
+pykdtree = ">=1.3.1"
+pyproj = ">=2.2"
+pyyaml = "*"
+setuptools = ">=3.2"
+
+[package.extras]
+cf = ["xarray"]
+dask = ["dask (>=0.16.1)"]
+gradient_search = ["shapely"]
+numexpr = ["numexpr"]
+quicklook = ["matplotlib", "cartopy (>=0.20.0)", "pillow"]
+rasterio = ["rasterio"]
+tests = ["rasterio", "dask", "xarray", "cartopy", "pillow", "matplotlib", "scipy", "zarr", "pytest-lazy-fixtures"]
+xarray_bilinear = ["xarray", "dask", "zarr"]
+
+[[package]]
+name = "pytest"
+version = "7.1.2"
+description = "pytest: simple powerful testing with Python"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+atomicwrites = {version = ">=1.0", markers = "sys_platform == \"win32\""}
+attrs = ">=19.2.0"
+colorama = {version = "*", markers = "sys_platform == \"win32\""}
+iniconfig = "*"
+packaging = "*"
+pluggy = ">=0.12,<2.0"
+py = ">=1.8.2"
+tomli = ">=1.0.0"
+
+[package.extras]
+testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "xmlschema"]
+
+[[package]]
+name = "pytest-cov"
+version = "3.0.0"
+description = "Pytest plugin for measuring coverage."
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+coverage = {version = ">=5.2.1", extras = ["toml"]}
+pytest = ">=4.6"
+
+[package.extras]
+testing = ["virtualenv", "pytest-xdist", "six", "process-tests", "hunter", "fields"]
+
+[[package]]
+name = "pytest-datafiles"
+version = "2.0.1"
+description = "py.test plugin to create a 'tmpdir' containing predefined files/directories."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+py = "*"
+pytest = ">=3.6"
+
+[[package]]
+name = "python-dateutil"
+version = "2.8.2"
+description = "Extensions to the standard Python datetime module"
+category = "main"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+
+[package.dependencies]
+six = ">=1.5"
+
+[[package]]
+name = "pytz"
+version = "2022.1"
+description = "World timezone definitions, modern and historical"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "pyyaml"
+version = "6.0"
+description = "YAML parser and emitter for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "rasterio"
+version = "1.3.0.post1"
+description = "Fast and direct raster I/O for use with Numpy and SciPy"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+affine = "*"
+attrs = "*"
+certifi = "*"
+click = ">=4.0"
+click-plugins = "*"
+cligj = ">=0.5"
+numpy = ">=1.18"
+setuptools = "*"
+snuggs = ">=1.4.1"
+
+[package.extras]
+all = ["sphinx-rtd-theme", "pytest-cov (>=2.2.0)", "sphinx", "numpydoc", "packaging", "shapely", "hypothesis", "ghp-import", "matplotlib", "ipython (>=2.0)", "boto3 (>=1.2.4)", "pytest (>=2.8.2)"]
+docs = ["ghp-import", "numpydoc", "sphinx", "sphinx-rtd-theme"]
+ipython = ["ipython (>=2.0)"]
+plot = ["matplotlib"]
+s3 = ["boto3 (>=1.2.4)"]
+test = ["boto3 (>=1.2.4)", "hypothesis", "packaging", "pytest-cov (>=2.2.0)", "pytest (>=2.8.2)", "shapely"]
+
+[[package]]
+name = "requests"
+version = "2.28.1"
+description = "Python HTTP for Humans."
+category = "main"
+optional = false
+python-versions = ">=3.7, <4"
+
+[package.dependencies]
+certifi = ">=2017.4.17"
+charset-normalizer = ">=2,<3"
+idna = ">=2.5,<4"
+urllib3 = ">=1.21.1,<1.27"
+
+[package.extras]
+socks = ["PySocks (>=1.5.6,!=1.5.7)"]
+use_chardet_on_py3 = ["chardet (>=3.0.2,<6)"]
+
+[[package]]
+name = "satpy"
+version = "0.37.0"
+description = "Python package for earth-observing satellite data processing"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+appdirs = "*"
+dask = {version = ">=0.17.1", extras = ["array"]}
+donfig = "*"
+numpy = ">=1.13"
+pillow = "*"
+pooch = "*"
+pykdtree = "*"
+pyorbital = "*"
+pyproj = ">=2.2"
+pyresample = ">=1.24.0"
+pyyaml = "*"
+trollimage = ">1.10.1"
+trollsift = "*"
+xarray = ">=0.10.1,<0.13.0 || >0.13.0"
+zarr = "*"
+
+[package.extras]
+abi_l1b = ["h5netcdf"]
+acspo = ["netCDF4 (>=1.1.8)"]
+all = ["astropy", "behave", "bottleneck", "defusedxml", "eccodes-python", "fsspec", "geoviews", "h5netcdf", "h5netcdf (>=0.7.3)", "h5py", "h5py (>=2.7.0)", "imageio", "netcdf4", "netCDF4 (>=1.1.8)", "pint", "pycoast", "pydecorate", "pygac", "pygac (>=1.3.0)", "pygrib", "pyhdf", "pylibtiff", "pyninjotiff", "pyorbital (>=1.3.1)", "pyspectral (>=0.10.1)", "pytest", "pytest-lazy-fixture", "python-geotiepoints", "python-geotiepoints (>=1.1.7)", "pytroll-schedule", "rasterio", "rioxarray", "s3fs", "skyfield", "sphinx", "sphinx-rtd-theme", "sphinxcontrib-apidoc", "trollimage", "trollimage"]
+amsr2_l1b = ["h5py (>=2.7.0)"]
+angles = ["pyorbital (>=1.3.1)"]
+animations = ["imageio"]
+avhrr_l1b_gaclac = ["pygac (>=1.3.0)"]
+awips_tiled = ["netCDF4 (>=1.1.8)"]
+cf = ["h5netcdf (>=0.7.3)"]
+clavrx = ["netCDF4 (>=1.1.8)"]
+doc = ["sphinx", "sphinx-rtd-theme", "sphinxcontrib-apidoc"]
+geocat = ["pyhdf"]
+geotiff = ["rasterio", "trollimage"]
+geoviews = ["geoviews"]
+hrit_msg = ["pytroll-schedule"]
+hrpt = ["pygac", "pyorbital (>=1.3.1)", "python-geotiepoints (>=1.1.7)"]
+hsaf_grib = ["pygrib"]
+mitiff = ["pylibtiff"]
+modis_l1b = ["pyhdf", "python-geotiepoints (>=1.1.7)"]
+msi_safe = ["bottleneck", "python-geotiepoints", "rioxarray"]
+nc_nwcsaf_msg = ["netCDF4 (>=1.1.8)"]
+ninjo = ["pint", "pyninjotiff"]
+omps_edr = ["h5py (>=2.7.0)"]
+overlays = ["pycoast", "pydecorate"]
+rayleigh = ["pyspectral (>=0.10.1)"]
+remote_reading = ["fsspec"]
+sar_c = ["defusedxml", "python-geotiepoints (>=1.1.7)", "rasterio", "rioxarray"]
+satpos_from_tle = ["astropy", "skyfield"]
+seviri_l1b_hrit = ["pyorbital (>=1.3.1)"]
+seviri_l1b_native = ["pyorbital (>=1.3.1)"]
+seviri_l1b_nc = ["netCDF4 (>=1.1.8)", "pyorbital (>=1.3.1)"]
+seviri_l2_bufr = ["eccodes-python"]
+seviri_l2_grib = ["eccodes-python"]
+tests = ["behave", "bottleneck", "defusedxml", "fsspec", "geoviews", "h5py", "imageio", "netcdf4", "pyhdf", "pylibtiff", "pytest", "pytest-lazy-fixture", "rasterio", "rioxarray", "s3fs", "trollimage"]
+viirs_compact = ["h5py (>=2.7.0)"]
+viirs_l1b = ["netCDF4 (>=1.1.8)"]
+viirs_sdr = ["h5py (>=2.7.0)"]
+
+[[package]]
+name = "scipy"
+version = "1.6.1"
+description = "SciPy: Scientific Library for Python"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = ">=1.16.5"
+
+[[package]]
+name = "setuptools"
+version = "63.4.3"
+description = "Easily download, build, install, upgrade, and uninstall Python packages"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+docs = ["sphinx", "jaraco.packaging (>=9)", "rst.linker (>=1.9)", "jaraco.tidelift (>=1.4)", "sphinx-notfound-page (==0.8.3)", "sphinx-hoverxref (<2)", "pygments-github-lexers (==0.0.5)", "sphinx-favicon", "sphinx-inline-tabs", "sphinx-reredirects", "sphinxcontrib-towncrier", "furo"]
+testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "flake8 (<5)", "pytest-enabler (>=1.3)", "pytest-perf", "mock", "flake8-2020", "virtualenv (>=13.0.0)", "wheel", "pip (>=19.1)", "jaraco.envs (>=2.2)", "pytest-xdist", "jaraco.path (>=3.2.0)", "build", "filelock (>=3.4.0)", "pip-run (>=8.8)", "ini2toml[lite] (>=0.9)", "tomli-w (>=1.0.0)", "pytest-black (>=0.3.7)", "pytest-cov", "pytest-mypy (>=0.9.1)"]
+testing-integration = ["pytest", "pytest-xdist", "pytest-enabler", "virtualenv (>=13.0.0)", "tomli", "wheel", "jaraco.path (>=3.2.0)", "jaraco.envs (>=2.2)", "build", "filelock (>=3.4.0)"]
+
+[[package]]
+name = "six"
+version = "1.16.0"
+description = "Python 2 and 3 compatibility utilities"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+
+[[package]]
+name = "snuggs"
+version = "1.4.7"
+description = "Snuggs are s-expressions for Numpy"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+numpy = "*"
+pyparsing = ">=2.1.6"
+
+[package.extras]
+test = ["pytest", "hypothesis"]
+
+[[package]]
+name = "tomli"
+version = "2.0.1"
+description = "A lil' TOML parser"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
+name = "toolz"
+version = "0.12.0"
+description = "List processing tools and functional utilities"
+category = "main"
+optional = false
+python-versions = ">=3.5"
+
+[[package]]
+name = "trollimage"
+version = "1.18.3"
+description = "Pytroll imaging library"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+numpy = ">=1.13"
+pillow = "*"
+
+[package.extras]
+geotiff = ["rasterio"]
+xarray = ["dask", "xarray"]
+
+[[package]]
+name = "trollsift"
+version = "0.4.0"
+description = "String parser/formatter"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
+name = "typing-extensions"
+version = "4.3.0"
+description = "Backported and Experimental Type Hints for Python 3.7+"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
+name = "urllib3"
+version = "1.26.11"
+description = "HTTP library with thread-safe connection pooling, file post, and more."
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, <4"
+
+[package.extras]
+brotli = ["brotlicffi (>=0.8.0)", "brotli (>=1.0.9)", "brotlipy (>=0.6.0)"]
+secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "certifi", "ipaddress"]
+socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
+
+[[package]]
+name = "xarray"
+version = "2022.6.0"
+description = "N-D labeled arrays and datasets in Python"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+numpy = ">=1.19"
+packaging = ">=20.0"
+pandas = ">=1.2"
+
+[package.extras]
+accel = ["scipy", "bottleneck", "numbagg", "flox"]
+complete = ["netcdf4", "h5netcdf", "scipy", "pydap", "zarr", "fsspec", "cftime", "rasterio", "cfgrib", "pooch", "bottleneck", "numbagg", "flox", "dask", "matplotlib", "seaborn", "nc-time-axis"]
+docs = ["netcdf4", "h5netcdf", "scipy", "pydap", "zarr", "fsspec", "cftime", "rasterio", "cfgrib", "pooch", "bottleneck", "numbagg", "flox", "dask", "matplotlib", "seaborn", "nc-time-axis", "sphinx-autosummary-accessors", "sphinx-rtd-theme", "ipython", "ipykernel", "jupyter-client", "nbsphinx", "scanpydoc"]
+io = ["netcdf4", "h5netcdf", "scipy", "pydap", "zarr", "fsspec", "cftime", "rasterio", "cfgrib", "pooch"]
+parallel = ["dask"]
+viz = ["matplotlib", "seaborn", "nc-time-axis"]
+
+[[package]]
+name = "zarr"
+version = "2.12.0"
+description = "An implementation of chunked, compressed, N-dimensional arrays for Python."
+category = "main"
+optional = false
+python-versions = ">=3.7, <4"
+
+[package.dependencies]
+asciitree = "*"
+fasteners = "*"
+numcodecs = ">=0.6.4"
+numpy = ">=1.7"
+
+[package.extras]
+jupyter = ["notebook", "ipytree"]
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.8"
+content-hash = "a163191af34cae3b2e05b013a586ae6819d7e918cde6d4f3f375fede69aaec07"
+
+[metadata.files]
+affine = []
+appdirs = []
+asciitree = []
+atomicwrites = []
+attrs = []
+autoflake = []
+black = []
+certifi = []
+charset-normalizer = []
+click = []
+click-plugins = []
+cligj = []
+cloudpickle = []
+colorama = []
+configobj = []
+coverage = []
+dask = []
+donfig = []
+entrypoints = []
+fasteners = []
+flake8 = []
+flake8-black = []
+flake8-isort = []
+flake8-unused-arguments = []
+fsspec = []
+idna = []
+iniconfig = []
+isort = []
+locket = []
+mccabe = []
+mypy = []
+mypy-extensions = []
+numcodecs = []
+numpy = []
+packaging = []
+pandas = []
+partd = []
+pathspec = []
+pillow = []
+platformdirs = []
+pluggy = []
+pooch = []
+py = []
+pycodestyle = []
+pyflakes = []
+pykdtree = []
+pyorbital = []
+pyparsing = []
+pyproj = []
+pyresample = []
+pytest = []
+pytest-cov = []
+pytest-datafiles = []
+python-dateutil = []
+pytz = []
+pyyaml = []
+rasterio = []
+requests = []
+satpy = []
+scipy = []
+setuptools = []
+six = []
+snuggs = []
+tomli = []
+toolz = []
+trollimage = []
+trollsift = []
+typing-extensions = []
+urllib3 = []
+xarray = []
+zarr = []
