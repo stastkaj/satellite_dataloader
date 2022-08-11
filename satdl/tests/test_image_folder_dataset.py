@@ -11,7 +11,7 @@ FIXTURE_DIR = Path(__file__).parent / "test_data"
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
-def test_sifd(datafiles):
+def test_sifd(datafiles) -> None:  # type: ignore
     sifd = StaticImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
@@ -37,7 +37,7 @@ def test_sifd(datafiles):
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
-def test_sifd_iter(datafiles):
+def test_sifd_iter(datafiles) -> None:  # type: ignore
     sifd = StaticImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
@@ -53,7 +53,7 @@ def test_sifd_iter(datafiles):
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
-def test_sifd_cache(datafiles):
+def test_sifd_cache(datafiles) -> None:  # type: ignore
     sifd = StaticImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
@@ -74,7 +74,7 @@ def test_sifd_cache(datafiles):
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
-def test_sifd_groupby(datafiles):
+def test_sifd_groupby(datafiles) -> None:  # type: ignore
     sifd = StaticImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
@@ -85,12 +85,12 @@ def test_sifd_groupby(datafiles):
     group = sifd.groupby("datetime", sortby=["datetime", "product"])
 
     assert len(group) == 3
-    assert len(group[0]) == 4
+    assert len(list(group[0])) == 4
 
     group = sifd.groupby("product", sortby="datetime")
 
     assert len(group) == 4
-    assert len(group[0]) == 3
+    assert len(list(group[0])) == 3
 
     i = 0
     for _ in group:

@@ -1,3 +1,4 @@
+from typing import Optional, Union
 from pathlib import Path
 
 import numpy as np
@@ -6,7 +7,9 @@ import xarray as xr
 
 
 def image2xr(
-    path: str or Path, georef: str or Path or xr.DataArray = None, require_georef: bool = True
+    path: Union[str, Path],
+    georef: Optional[Union[str, Path, xr.DataArray]] = None,
+    require_georef: bool = True,
 ) -> xr.DataArray:
     """Load (possibly georeferenced) image
 
