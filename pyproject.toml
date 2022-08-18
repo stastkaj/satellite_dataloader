@@ -31,7 +31,7 @@ pytest-datafiles = "^2.0.1"
 bumpver = "^2022.1118"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.1.0a6"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
