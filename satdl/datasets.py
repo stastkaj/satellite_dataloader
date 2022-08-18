@@ -78,6 +78,7 @@ class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
         self._georef = georef  # TODO: validate georeference
         self._files = list(self._base_folder.rglob(self._file_mask.globify()))
         self._attrs = {self._filename2key(f): self._extract_attrs(f, relative=False) for f in self._files}
+        self._ind2key = {ind: key for ind, key in enumerate(self._attrs)}
 
         self._get_image = lru_cache(max_cache)(_get_get_image(self._georef))
 
@@ -100,12 +101,30 @@ class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
         """Return dict {key: attrs_dict}."""
         return self._attrs
 
+    def get_attrs(self, key: Union[int, str]) -> Dict[str, Any]:
+        """Return attributes of i-th data element.
+
+        If key is an integer, it is interpreted as a positional index.
+        """
+        if not isinstance(key, str):
+            # convert index to key
+            key = self._ind2key[key]
+
+        return self._attrs[key]
+
     def items(self) -> ItemsView[str, xr.DataArray]:
         """Return list of (key, attributes) pairs."""
         return dict((key, self[key]) for key in self.keys()).items()
 
-    def __getitem__(self, key: str) -> xr.DataArray:
-        """Return image as DataArray from key."""
+    def __getitem__(self, key: Union[int, str]) -> xr.DataArray:
+        """Return image as DataArray from key.
+
+        If key is an integer, it is interpreted as a positional index.
+        """
+        if not isinstance(key, str):
+            # convert index to key
+            key = self._ind2key[key]
+
         da = self._get_image(self._base_folder / key)
         da.attrs.update(self._extract_attrs(key, relative=True))
 
@@ -221,6 +240,41 @@ class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
         group_attrs = [{group_attr: index2attr[group_attr][ind]} for ind in df_pivot.index.values]
         group_keys = [group_keys.values for _, group_keys in df_pivot.iterrows()]
         return GroupedDataset(self, group_keys=group_keys, group_attrs=group_attrs)
+
+    def index_grid(self, dims: Sequence[str], ascending: Optional[bool] = None) -> xr.DataArray:
+        """Interpret given attributes as coordinates and return grid of data indices in these coordinates.
+
+        Missing data are marked by a negative number.
+
+        Parameters
+        ----------
+        dims: List of attributes that will become grid dimensions.
+
+        Returns
+        -------
+        xarray DataArray with indices of images
+        """
+        # find unique values of coordiantes
+        coords = defaultdict(set)
+        for data_attrs in self.attrs.values():
+            for attr in dims:
+                coords[attr].add(data_attrs.get(attr, None))
+
+        # build the grid
+        grid = xr.DataArray(dims=dims, coords={k: list(v) for k, v in coords.items()}).astype(int)
+        grid[:] = -1  # -1 means no data
+        for ind, data_attrs in enumerate(self._attrs.values()):
+            c = {dim: data_attrs.get(dim, None) for dim in dims}
+            if grid.sel(c) >= 0:
+                raise ValueError(f"Found duplicate data items for grid coords: {c}.")
+
+            grid.loc[c] = ind
+
+        # sort the coordinates
+        if ascending is not None:
+            grid = grid.sortby(dims, ascending=ascending)
+
+        return grid
 
 
 class GroupedDataset(Generic[DataType]):

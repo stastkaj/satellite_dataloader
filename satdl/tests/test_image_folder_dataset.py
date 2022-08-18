@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pytest
 import xarray as xr
 
@@ -12,18 +13,23 @@ FIXTURE_DIR = Path(__file__).parent / "test_data"
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
 def test_sifd(datafiles) -> None:  # type: ignore
+    # can build the object
     sifd = StaticImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
     )
+
+    # sifd contains all files it should
     assert len(sifd) == 12
     for f in Path(datafiles).glob("*.jpg"):
         assert Path(f).name in sifd.keys()
 
+    # items has correct attributes
     for attr in sifd.attrs.values():
         assert attr["projection"] == "msgce"
 
+    # can load the dataa
     for key in sifd.keys():
         im = sifd[key]
 
@@ -33,6 +39,10 @@ def test_sifd(datafiles) -> None:  # type: ignore
         assert im.lat.max() < 56.64341
         assert im.lon.min() > -1.687554
         assert im.lon.max() < 30.715534
+
+    # indexing by integer works
+    assert (sifd[3] == sifd[list(sifd.keys())[3]]).all()
+    assert sifd.get_attrs(3) == sifd.get_attrs(list(sifd.keys())[3])
 
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
@@ -115,3 +125,29 @@ def test_sifd_groupby(datafiles) -> None:  # type: ignore
     assert [attr["product"] for attr in groups.attrs] == sorted(
         set([attr["product"] for attr in sifd.attrs.values()]), reverse=False
     )
+
+
+@pytest.mark.datafiles(FIXTURE_DIR / "images")
+@pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
+def test_sifd_grid(datafiles) -> None:  # type: ignore
+    sifd = StaticImageFolderDataset(
+        datafiles,
+        "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
+        georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
+        max_cache=None,
+    )
+
+    grid = sifd.index_grid(["product", "datetime"], ascending=False)
+
+    # grid contains unique indicies 0..12
+    assert grid.dtype == int
+    assert len(np.unique(grid)) == 12
+    assert grid.min() == 0
+    assert grid.max() == 11
+
+    # assert the assignment is correct
+    for ind in grid.sel(product="vis-ir").values.ravel():
+        assert sifd.get_attrs(ind)["product"] == "vis-ir"
+
+    # axes are sorted
+    assert grid.product.values.tolist() == sorted(grid.product.values.tolist(), reverse=True)
