@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "satellite-dataloader"
-version = "0.1.0"
+version = "2022.8.1001a0"
 description = "Satellite dataloader"
 authors = ["Jakub Seidl <jakub.seidl@email.cz>"]
 readme = "README.md"
@@ -28,6 +28,7 @@ pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
 mypy = "^0.971"
 pytest-datafiles = "^2.0.1"
+bumpver = "^2022.1118"
 
 [build-system]
 requires = ["poetry-core"]
@@ -56,3 +57,23 @@ check_untyped_defs = true
 disallow_incomplete_defs = true
 
 cache_dir = ".cache/mypy/"
+
+[tool.bumpver]
+current_version = "2022.08.1001-alpha"
+version_pattern = "YYYY.0M.BUILD[-TAG]"
+commit_message = "bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = true
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+    'version = "{pep440_version}"'
+]
+"satdl/tests/test_satdl.py" = [
+    '    assert satdl.__version__ == "{version}"'
+]
+"satdl/__init__.py" = [
+    '__version__ = "{version}"'
+]
