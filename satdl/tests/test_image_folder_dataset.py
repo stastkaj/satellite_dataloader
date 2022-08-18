@@ -82,18 +82,36 @@ def test_sifd_groupby(datafiles) -> None:  # type: ignore
         max_cache=None,
     )
 
-    group = sifd.groupby("datetime", sortby=["datetime", "product"])
+    # groupby works for string align and ascending=True
+    groups = sifd.groupby("datetime", align="product", align_ascending=True, group_ascending=False)
 
-    assert len(group) == 3
-    assert len(list(group[0])) == 4
+    assert len(groups) == 3
+    for group in groups:
+        assert len(list(group)) == 4
+    # group keys should be sorted in ascending order
+    for group in groups:
+        assert [da.attrs["product"] for da in group] == sorted(  # type: ignore
+            set([attr["product"] for attr in sifd.attrs.values()])
+        )
+    # groups should be sorted in descending order
+    assert [attr["datetime"] for attr in groups.attrs] == sorted(
+        set([attr["datetime"] for attr in sifd.attrs.values()]), reverse=True
+    )
 
-    group = sifd.groupby("product", sortby="datetime")
+    # groupby works for list align and ascending=False
+    groups = sifd.groupby(
+        "product", align=["datetime", "projection"], align_ascending=False, group_ascending=True
+    )
 
-    assert len(group) == 4
-    assert len(list(group[0])) == 3
-
-    i = 0
-    for _ in group:
-        i += 1
-
-    assert i == 4
+    assert len(groups) == 4
+    for group in groups:
+        assert len(list(group)) == 3
+    # group keys should be sorted in ascending order
+    for group in groups:
+        assert [da.attrs["datetime"] for da in group] == sorted(  # type: ignore
+            set([attr["datetime"] for attr in sifd.attrs.values()]), reverse=True
+        )
+    # groups should be sorted in asscending order
+    assert [attr["product"] for attr in groups.attrs] == sorted(
+        set([attr["product"] for attr in sifd.attrs.values()]), reverse=False
+    )

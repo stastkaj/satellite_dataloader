@@ -4,8 +4,10 @@ from typing import (
     Any,
     Callable,
     Container,
+    DefaultDict,
     Dict,
     Generator,
+    Generic,
     ItemsView,
     Iterable,
     KeysView,
@@ -13,6 +15,7 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    TypeVar,
     Union,
 )
 from collections import defaultdict
@@ -21,6 +24,7 @@ import logging
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from trollsift import Parser
 import xarray as xr
 
@@ -28,6 +32,9 @@ from satdl.utils import image2xr, tolist
 
 
 _logger = logging.getLogger(__name__)
+
+
+DataType = TypeVar("DataType")
 
 
 def _get_get_image(
@@ -85,27 +92,27 @@ class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
         return str(Path(filename).relative_to(self._base_folder))
 
     def keys(self) -> KeysView[str]:
-        """Return all image keys"""
+        """Return all image keys."""
         return self._attrs.keys()
 
     @property
     def attrs(self) -> Dict[str, Dict[str, Any]]:
-        """Return dict {key: attrs_dict}"""
+        """Return dict {key: attrs_dict}."""
         return self._attrs
 
     def items(self) -> ItemsView[str, xr.DataArray]:
-        """Return list of (key, attributes) pairs"""
+        """Return list of (key, attributes) pairs."""
         return dict((key, self[key]) for key in self.keys()).items()
 
     def __getitem__(self, key: str) -> xr.DataArray:
-        """Return image as DataArray from key"""
+        """Return image as DataArray from key."""
         da = self._get_image(self._base_folder / key)
         da.attrs.update(self._extract_attrs(key, relative=True))
 
         return da
 
     def iloc(self, i: int) -> xr.DataArray:
-        """Return i-th image as DataArrray
+        """Return i-th image as DataArrray.
 
         Raises IndexError if i >= len(self)
         """
@@ -122,50 +129,105 @@ class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
         return key in self._attrs
 
     def groupby(
-        self, attr_name: str, sortby: Optional[Union[str, List[str]]] = None, ascending: bool = True
+        self,
+        group_attr: str,
+        align: Optional[Union[str, Sequence[str]]] = None,
+        group_ascending: Optional[bool] = None,
+        align_ascending: Optional[bool] = None,
     ) -> "GroupedDataset":
         """Split dataset by a value of an attribute.
 
         Parameters
         ----------
-        attr_name: str
+        group_attr: str
             Name of the attribute used for splitting.
         sortby: str, list of str, optional
             Sort each group by the values of these attributes.
-        ascending: bool
-            Sort in ascending order?
+        align: Attribute or collection of attributes that should be aligned into a grid. Cannot
+            align by group attrs. If used, all groups are guaranteed to have the same length.
+            If some combination of align attributes is missing in some groups, its data will
+            be None. For instance, `groupby('product', sortby: 'time', align='time')` will guarantee
+            that each group will have the same length equal to the number of unique times in the data
+            and if data for a particular time are not available in some group, it will return None.
+        group_ascending: bool, optional
+            Sort groups? Do not sort if None.
+        align_ascending: bool, optional
+            Sort by the align attributes in ascending order? Do not sort if None.
         """
-        sortby = sortby or []
-        if isinstance(sortby, str):
-            sortby = [sortby]
+        align = tolist(align)
 
-        if sortby:
-            sort_fun = sorted
-        else:
+        if group_attr in align:
+            raise ValueError("`align` contains groupby `group_attr`.")
 
-            def sort_fun(x: Any, *args: Any, **kwargs: Any) -> Any:  # noqa: U100
-                return x
+        important_attrs = {group_attr} | set(align)
 
-        # build dict {attribute_value: sorted_list_of_keys_in_this_group}
-        groups = defaultdict(lambda: [])
-        for key, key_attrs in sort_fun(
-            self.attrs.items(),
-            key=lambda x: tuple(x[1][sort_col] for sort_col in sortby),  # type: ignore
-            reverse=not ascending,
-        ):
-            groups[key_attrs.get(attr_name)].append(key)
+        # hack to avoid casting of attr values by pandas to a different type, e.g. datetime to np.datetime
+        # raises exception if values of important_attrs are not hashable
+        # replaces attr values by an integer index
+        # TODO: avoid this hack?
+        # TODO: generalize for unhashable values
+        attr2index: DefaultDict[str, Dict[Any, int]] = defaultdict(dict)
+        index2attr: DefaultDict[str, Dict[int, Any]] = defaultdict(dict)
+        attrs = []
+        for data_key, data_attrs in self.attrs.items():
+            attrs_dict = {}
+            for attr, attr_value in data_attrs.items():
+                if attr not in important_attrs:
+                    continue
+
+                if attr_value not in attr2index[attr]:
+                    ind = len(attr2index[attr])
+                    attr2index[attr][attr_value] = ind
+                    index2attr[attr][ind] = attr_value
+                else:
+                    ind = attr2index[attr][attr_value]
+
+                attrs_dict[attr] = ind
+
+            attrs.append(attrs_dict)
+
+        data_key_column = "__data_key__"
+        while data_key_column in important_attrs:  # avoid conflict with attribute names
+            data_key += "_"
+
+        df = pd.DataFrame.from_dict(attrs)
+        df[data_key_column] = self.keys()
+
+        df_pivot = df.pivot(index=group_attr, columns=align, values=data_key_column)
+
+        # sort align attributes by value
+        if align_ascending is not None:
+
+            def col2sortkey(col: Any) -> Sequence[Any]:
+                col = tolist(col)
+                return tuple(index2attr[attr][col[i]] for i, attr in enumerate(align))  # type: ignore
+
+            sorted_cols = sorted(
+                df_pivot.columns, key=col2sortkey, reverse=not align_ascending  # type: ignore
+            )
+            df_pivot = df_pivot[sorted_cols]
+
+        # sort group attributes by value
+        if group_ascending is not None:
+            sorted_indices = [
+                ind
+                for _, ind in sorted(
+                    ((index2attr[group_attr][i], i) for i in df_pivot.index), reverse=not group_ascending
+                )
+            ]
+            df_pivot = df_pivot.iloc[sorted_indices]
 
         # return object representing the dataset split
-        return GroupedDataset(
-            self, key_groups=groups.values(), group_attrs=tuple({attr_name: k} for k in groups.keys())
-        )
+        group_attrs = [{group_attr: index2attr[group_attr][ind]} for ind in df_pivot.index.values]
+        group_keys = [group_keys.values for _, group_keys in df_pivot.iterrows()]
+        return GroupedDataset(self, group_keys=group_keys, group_attrs=group_attrs)
 
 
-class GroupedDataset:
+class GroupedDataset(Generic[DataType]):
     def __init__(
         self,
-        parent: Mapping[str, Any],
-        key_groups: Iterable[List[str]],
+        parent: Mapping[str, DataType],
+        group_keys: Iterable[List[str]],
         group_attrs: Sequence[Dict[str, Any]],
     ):
         """Dataset representing items from a parent dataset grouped by some condition.
@@ -178,34 +240,35 @@ class GroupedDataset:
         Parameters
         ----------
         parent: The parent dataset.
-        key_groups: Iterable of lists of parent keys. Each list represents one group and contains
+        group_keys: Iterable of lists of parent keys. Each list represents one group and contains
             all keys that belong to that group.
         group_attrs: Enumeration of attributes that defined the groups.
             E.g. [{product: 'IR108', date: '20201018}, {product: 'HRV', date: '20201018'},
                   {product: 'IR108', data: '20201019}]
         """
         self._parent = parent
-        self._key_groups = list(key_groups)
+        self._group_keys = list(group_keys)
         self._group_attrs = list(group_attrs)
 
-        if len(self._key_groups) != len(self._group_attrs):
+        if len(self._group_keys) != len(self._group_attrs):
             raise ValueError(
-                f"len(key_groups) != len(group_attrs): "
-                f"{len(self._key_groups)} != {len(self._group_attrs)}"
+                f"len(group_keys) != len(group_attrs): "
+                f"{len(self._group_keys)} != {len(self._group_attrs)}"
             )
 
     def __len__(self) -> int:
-        return len(self._key_groups)
+        return len(self._group_keys)
 
-    def __getitem__(self, i: int) -> Generator[xr.DataArray, Any, Any]:
+    def __getitem__(self, i: int) -> Generator[Optional[DataType], Any, Any]:
         """Get all elements of the i-th group."""
-        return (self._parent[key] for key in self._key_groups[i])
+        return (self._parent[key] for key in self._group_keys[i])
 
     @property
     def attrs(self) -> List[Dict[str, Any]]:
+        """Return list of attributes that were used to create the groups."""
         return self._group_attrs
 
-    def __iter__(self) -> Generator[Generator[xr.DataArray, None, None], None, None]:
+    def __iter__(self) -> Generator[Generator[Optional[DataType], None, None], None, None]:
         return (self[i] for i in range(len(self)))
 
     def filter(
@@ -250,8 +313,8 @@ class GroupedDataset:
         forbidden_attrs = {k: tolist(v) for k, v in forbidden_attrs.items()}
 
         filtered_group_attrs = []
-        filtered_key_groups = []
-        for group_attr, group_of_keys in zip(self._group_attrs, self._key_groups):
+        filtered_group_keys = []
+        for group_attr, group_of_keys in zip(self._group_attrs, self._group_keys):
             if any(forbidden_group == group_attr for forbidden_group in forbidden_groups):
                 # this group is forbidden
                 continue
@@ -275,6 +338,6 @@ class GroupedDataset:
                 continue
 
             filtered_group_attrs.append(group_attr)
-            filtered_key_groups.append(group_of_keys)
+            filtered_group_keys.append(group_of_keys)
 
-        return GroupedDataset(self._parent, key_groups=filtered_key_groups, group_attrs=filtered_group_attrs)
+        return GroupedDataset(self._parent, group_keys=filtered_group_keys, group_attrs=filtered_group_attrs)
