@@ -9,9 +9,15 @@ def grouped_dataset() -> GroupedDataset:
 
     return GroupedDataset(
         dataset,
-        key_groups=[["a", "b"], ["c", "e", "d"], ["f"]],
+        group_keys=[["a", "b"], ["c", "e", "d"], ["f"]],
         group_attrs=[{"attr1": 1}, {"attr1": 2, "attr2": 1}, {"attr1": 2, "attr2": 2}],
     )
+
+
+def test_grouped_dataset_incorrect_input() -> None:
+    # different length of group keys and list of data
+    with pytest.raises(ValueError):
+        GroupedDataset({}, group_keys=[["1"], ["0"]], group_attrs=[{"a1": 0}])
 
 
 def test_grouped_dataset_properties(grouped_dataset: GroupedDataset) -> None:
