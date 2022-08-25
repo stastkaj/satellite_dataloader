@@ -17,8 +17,9 @@ from typing import (
     Sequence,
     TypeVar,
     Union,
+    overload,
 )
-from collections import defaultdict
+from collections import abc, defaultdict
 from functools import lru_cache
 import logging
 from pathlib import Path
@@ -101,12 +102,28 @@ class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
         """Return dict {key: attrs_dict}."""
         return self._attrs
 
-    def get_attrs(self, key: Union[int, str]) -> Dict[str, Any]:
+    @overload
+    def get_attrs(self, key: Union[int, str]) -> Dict[str, Any]:  # noqa: U100
+        ...
+
+    @overload
+    def get_attrs(self, key: List[Union[int, str]]) -> List[Dict[str, Any]]:  # noqa: U100
+        ...
+
+    def get_attrs(
+        self, key: Union[int, str, List[Union[int, str]]]
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Return attributes of i-th data element.
 
         If key is an integer, it is interpreted as a positional index.
+
+        If key is a sequence, a list of attrs is returned.
         """
         if not isinstance(key, str):
+            if isinstance(key, abc.Sequence):
+                # return sequence
+                return [self.get_attrs(k) for k in key]
+
             # convert index to key
             key = self._ind2key[key]
 
@@ -116,12 +133,28 @@ class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
         """Return list of (key, attributes) pairs."""
         return dict((key, self[key]) for key in self.keys()).items()
 
-    def __getitem__(self, key: Union[int, str]) -> xr.DataArray:
+    @overload
+    def __getitem__(self, key: Union[int, str]) -> xr.DataArray:  # noqa: U100
+        ...
+
+    @overload
+    def __getitem__(self, key: List[Union[int, str]]) -> List[xr.DataArray]:  # noqa: U100
+        ...
+
+    def __getitem__(
+        self, key: Union[int, str, List[Union[int, str]]]
+    ) -> Union[xr.DataArray, List[xr.DataArray]]:
         """Return image as DataArray from key.
 
         If key is an integer, it is interpreted as a positional index.
+
+        If key is a sequence, a list of DataArrays is returned.
         """
         if not isinstance(key, str):
+            if isinstance(key, abc.Sequence):
+                # return sequence
+                return [self[k] for k in key]
+
             # convert index to key
             key = self._ind2key[key]
 
