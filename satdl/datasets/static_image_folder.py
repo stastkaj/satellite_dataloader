@@ -1,20 +1,7 @@
 from __future__ import annotations
 
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    ItemsView,
-    KeysView,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Union,
-    overload,
-)
-from collections import abc, defaultdict
+from typing import Any, Callable, Dict, Generator, ItemsView, KeysView, List, Optional, Union, overload
+from collections import abc
 from functools import lru_cache
 import logging
 from pathlib import Path
@@ -23,9 +10,8 @@ import numpy as np
 from trollsift import Parser
 import xarray as xr
 
+from satdl.datasets.dataset_base import DatasetBase
 from satdl.utils import image2xr
-
-from . import GriddedDataset
 
 
 _logger = logging.getLogger(__name__)
@@ -41,7 +27,7 @@ def _get_get_image(
     return _get_image
 
 
-class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
+class StaticImageFolderDataset(AttributeDatasetBase[xr.DataArray]):
     def __init__(
         self,
         base_folder: Union[str, Path],
@@ -172,55 +158,3 @@ class StaticImageFolderDataset(Mapping[str, xr.DataArray]):
 
     def __contains__(self, key: Any) -> bool:
         return key in self._attrs
-
-    def index_grid(self, dims: Sequence[str], ascending: Optional[bool] = None) -> xr.DataArray:
-        """Interpret given attributes as coordinates and return grid of data indices in these coordinates.
-
-        Missing data are marked by a negative number.
-
-        Parameters
-        ----------
-        dims: List of attributes that will become grid dimensions.
-        ascending: Sort axes in ascending (True), descending(False) order or not sort (None).
-
-        Returns
-        -------
-        xarray DataArray with indices of images
-        """
-        # find unique values of coordiantes
-        coords = defaultdict(set)
-        for data_attrs in self.attrs.values():
-            for attr in dims:
-                coords[attr].add(data_attrs.get(attr, None))
-
-        # build the grid
-        grid = xr.DataArray(dims=dims, coords={k: list(v) for k, v in coords.items()}).astype(int)
-        grid[:] = -1  # -1 means no data
-        for ind, data_attrs in enumerate(self._attrs.values()):
-            c = {dim: data_attrs.get(dim, None) for dim in dims}
-            if grid.sel(c) >= 0:
-                raise ValueError(f"Found duplicate data items for grid coords: {c}.")
-
-            grid.loc[c] = ind
-
-        # sort the coordinates
-        if ascending is not None:
-            grid = grid.sortby(dims, ascending=ascending)
-
-        return grid
-
-    def grid(self, dims: Sequence[str], ascending: Optional[bool] = None) -> "GriddedDataset":
-        """Return gridded dataset for given dimensions.
-
-        Parameters
-        ----------
-        dims: List of attributes that will become grid dimensions.
-        ascending: Sort axes in ascending (True), descending(False) order or not sort (None).
-
-        Returns
-        -------
-        GriddedDataset
-        """
-        return GriddedDataset(
-            self, self.index_grid(dims=dims, ascending=ascending), invalid_key=lambda x: x < 0
-        )
