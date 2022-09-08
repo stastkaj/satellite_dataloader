@@ -45,6 +45,14 @@ def test_gridded_dataset(gridded_dataset: GriddedDataset) -> None:
     with pytest.raises(IndexError):
         gridded_dataset.index_grid.isel(b=5)
 
+    # coords work
+    assert all(
+        k1 == k2 and (v1 == v2).all()
+        for (k1, v1), (k2, v2) in zip(
+            gridded_dataset.coords.items(), gridded_dataset.index_grid.coords.items()
+        )
+    )
+
     # single iter returns another gridded dataset
     iterlist = [v for v in gridded_dataset]
     assert all(v.dims == ("b",) for v in iterlist)
