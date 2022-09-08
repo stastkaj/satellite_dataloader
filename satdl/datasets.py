@@ -325,7 +325,7 @@ class GriddedDataset:
         if len(args) > 1:
             raise ValueError("Too many arguments. Got more arguments than dimensions.")
 
-        key = index_subgrid.values
+        key = index_subgrid.values.item()
         if callable(self.invalid_key):
             if self.invalid_key(key):
                 return None
