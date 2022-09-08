@@ -41,25 +41,9 @@ def test_sifd(datafiles) -> None:  # type: ignore
         assert im.lon.max() < 30.715534
 
     # indexing by integer works
-    assert (sifd[3] == sifd[list(sifd.keys())[3]]).all()  # type: ignore
-    assert sifd.get_attrs(3) == sifd.get_attrs(list(sifd.keys())[3])
-
-    # indexing by a sequence works
-    sifd3, sifd2 = sifd[[3, 2]]
-    assert (sifd3 == sifd[list(sifd.keys())[3]]).all()
-    assert (sifd2 == sifd[list(sifd.keys())[2]]).all()
-
-    sifd3a, sifd2a = sifd.get_attrs([3, 2])
-    assert sifd3a == sifd.get_attrs(list(sifd.keys())[3])
-    assert sifd2a == sifd.get_attrs(list(sifd.keys())[2])
-
-    sifd3, sifd2 = sifd[[3, list(sifd.keys())[2]]]
-    assert (sifd3 == sifd[list(sifd.keys())[3]]).all()
-    assert (sifd2 == sifd[list(sifd.keys())[2]]).all()
-
-    sifd3a, sifd2a = sifd.get_attrs([3, list(sifd.keys())[2]])
-    assert sifd3a == sifd.get_attrs(list(sifd.keys())[3])
-    assert sifd2a == sifd.get_attrs(list(sifd.keys())[2])
+    assert (sifd.iloc[3] == sifd[list(sifd.keys())[3]]).all()
+    for data, index in zip(sifd.iloc[3:5], [3, 4]):
+        assert (data == sifd[list(sifd.keys())[index]]).all()
 
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
@@ -119,7 +103,7 @@ def test_sifd_index_grid(datafiles) -> None:  # type: ignore
 
     # assert the assignment is correct
     for ind in grid.sel(product="vis-ir").values.ravel():
-        assert sifd.get_attrs(ind)["product"] == "vis-ir"  # type: ignore
+        assert sifd.attrs[list(sifd.keys())[ind]]["product"] == "vis-ir"  # type: ignore
 
     # axes are sorted
     assert grid.product.values.tolist() == sorted(grid.product.values.tolist(), reverse=True)
@@ -137,5 +121,5 @@ def test_sifd_grid(datafiles) -> None:  # type: ignore
 
     grid = sifd.grid(["product", "datetime"], ascending=False)
 
-    assert grid.dataset is sifd
+    assert grid.dataset is sifd.iloc
     assert (grid.index_grid == sifd.index_grid(["product", "datetime"], ascending=False)).all()

@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Generator, ItemsView, KeysView, List, Optional, Union, overload
-from collections import abc
+from typing import Any, Callable, Dict, List, Optional, Union
 from functools import lru_cache
 import logging
 from pathlib import Path
 
-import numpy as np
 from trollsift import Parser
 import xarray as xr
 
-from satdl.datasets.dataset_base import DatasetBase
+from satdl.datasets.dataset_base import AttributeDatasetBase
 from satdl.utils import image2xr
 
 
@@ -27,7 +25,7 @@ def _get_get_image(
     return _get_image
 
 
-class StaticImageFolderDataset(AttributeDatasetBase[xr.DataArray]):
+class StaticImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
     def __init__(
         self,
         base_folder: Union[str, Path],
@@ -52,109 +50,44 @@ class StaticImageFolderDataset(AttributeDatasetBase[xr.DataArray]):
             Maximum number of images that will be cached.
         """
         self._base_folder = Path(base_folder)
-        if not self._base_folder.exists():
-            raise ValueError(f"base folder {base_folder} does not exist")
         self._file_mask = Parser(file_mask)
         self._georef = georef  # TODO: validate georeference
-        self._files = list(self._base_folder.rglob(self._file_mask.globify()))
-        self._attrs = {self._filename2key(f): self._extract_attrs(f, relative=False) for f in self._files}
-        self._ind2key = {ind: key for ind, key in enumerate(self._attrs)}
+        self._relative_key = True
+
+        super().__init__()
 
         self._get_image = lru_cache(max_cache)(_get_get_image(self._georef))
 
-    def __len__(self) -> int:
-        return len(self._files)
+    def _find_items(
+        self, base_folder: Optional[Path] = None, file_mask: Optional[Parser] = None
+    ) -> List[Path]:
+        base_folder = base_folder or self._base_folder
+        file_mask = file_mask or self._file_mask
 
-    def _extract_attrs(self, filename: Union[str, Path], relative: bool = False) -> Dict[str, Any]:
-        key = str(filename) if relative else self._filename2key(filename)
+        if not base_folder.exists():
+            raise ValueError(f"base folder {base_folder} does not exist.")
+
+        return list(base_folder.rglob(file_mask.globify()))
+
+    def _extract_attrs(self, item: Path, relative: Optional[bool] = None) -> Dict[str, Any]:
+        if relative is None:
+            relative = self._relative_key
+        key = self._item2key(item, relative=relative)
         return self._file_mask.parse(key)
 
-    def _filename2key(self, filename: Union[str, Path]) -> str:
-        return str(Path(filename).relative_to(self._base_folder))
+    def _item2key(self, item: Path, relative: Optional[bool] = None) -> str:
+        if relative is None:
+            relative = self._relative_key
+        return str(item.relative_to(self._base_folder)) if relative else str(item)
 
-    def keys(self) -> KeysView[str]:
-        """Return all image keys."""
-        return self._attrs.keys()
+    def _key2item(self, key: str, relative: Optional[bool] = None) -> Path:
+        if relative is None:
+            relative = self._relative_key
+        return self._base_folder / key if relative else Path(key)
 
-    @property
-    def attrs(self) -> Dict[str, Dict[str, Any]]:
-        """Return dict {key: attrs_dict}."""
-        return self._attrs
-
-    @overload
-    def get_attrs(self, key: Union[int, str]) -> Dict[str, Any]:  # noqa: U100
-        ...
-
-    @overload
-    def get_attrs(self, key: List[Union[int, str]]) -> List[Dict[str, Any]]:  # noqa: U100
-        ...
-
-    def get_attrs(
-        self, key: Union[int, str, List[Union[int, str]]]
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """Return attributes of i-th data element.
-
-        If key is an integer, it is interpreted as a positional index.
-
-        If key is a sequence, a list of attrs is returned.
-        """
-        if not isinstance(key, str):
-            if isinstance(key, abc.Sequence):
-                # return sequence
-                return [self.get_attrs(k) for k in key]
-
-            # convert index to key
-            key = self._ind2key[key]
-
-        return self._attrs[key]
-
-    def items(self) -> ItemsView[str, xr.DataArray]:
-        """Return list of (key, attributes) pairs."""
-        return dict((key, self[key]) for key in self.keys()).items()
-
-    @overload
-    def __getitem__(self, key: Union[int, str]) -> xr.DataArray:  # noqa: U100
-        ...
-
-    @overload
-    def __getitem__(self, key: List[Union[int, str]]) -> List[xr.DataArray]:  # noqa: U100
-        ...
-
-    def __getitem__(
-        self, key: Union[int, str, List[Union[int, str]]]
-    ) -> Union[xr.DataArray, List[xr.DataArray]]:
-        """Return image as DataArray from key.
-
-        If key is an integer, it is interpreted as a positional index.
-
-        If key is a sequence, a list of DataArrays is returned.
-        """
-        if not isinstance(key, str):
-            if isinstance(key, abc.Sequence):
-                # return sequence
-                return [self[k] for k in key]
-
-            # convert index to key
-            key = self._ind2key[key]
-
-        da = self._get_image(self._base_folder / key)
-        da.attrs.update(self._extract_attrs(key, relative=True))
+    def _get_data(self, key: str) -> xr.DataArray:
+        """Return data given key."""
+        da = self._get_image(self._key2item(key))
+        da.attrs.update(self._extract_attrs(self._key2item(key), relative=True))
 
         return da
-
-    def iloc(self, i: int) -> xr.DataArray:
-        """Return i-th image as DataArrray.
-
-        Raises IndexError if i >= len(self)
-        """
-        return self[self._filename2key(self._files[i])]
-
-    def random(self) -> xr.DataArray:
-        """Return random image as DataArray"""
-        return self.iloc(np.random.randint(len(self)))
-
-    def __iter__(self) -> Generator[str, None, None]:
-        return (key for key in self.keys())
-
-    def __contains__(self, key: Any) -> bool:
-        return key in self._attrs
