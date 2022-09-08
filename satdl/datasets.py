@@ -268,6 +268,10 @@ class GriddedDataset:
         """List of dimensions of the grid."""
         return self.index_grid.dims
 
+    @property
+    def coords(self) -> xr.core.coordinates.DataArrayCoordinates:
+        return self.index_grid.coords
+
     def __len__(self) -> int:
         return len(self.index_grid.coords[self.index_grid.dims[0]])
 
