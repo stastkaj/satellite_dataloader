@@ -101,52 +101,7 @@ def test_sifd_cache(datafiles) -> None:  # type: ignore
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
-def test_sifd_groupby(datafiles) -> None:  # type: ignore
-    sifd = StaticImageFolderDataset(
-        datafiles,
-        "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
-        georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
-        max_cache=None,
-    )
-
-    # groupby works for string align and ascending=True
-    groups = sifd.groupby("datetime", align="product", align_ascending=True, group_ascending=False)
-
-    assert len(groups) == 3
-    for group in groups:
-        assert len(list(group)) == 4
-    # group keys should be sorted in ascending order
-    for group in groups:
-        assert [da.attrs["product"] for da in group] == sorted(  # type: ignore
-            set([attr["product"] for attr in sifd.attrs.values()])
-        )
-    # groups should be sorted in descending order
-    assert [attr["datetime"] for attr in groups.attrs] == sorted(
-        set([attr["datetime"] for attr in sifd.attrs.values()]), reverse=True
-    )
-
-    # groupby works for list align and ascending=False
-    groups = sifd.groupby(
-        "product", align=["datetime", "projection"], align_ascending=False, group_ascending=True
-    )
-
-    assert len(groups) == 4
-    for group in groups:
-        assert len(list(group)) == 3
-    # group keys should be sorted in ascending order
-    for group in groups:
-        assert [da.attrs["datetime"] for da in group] == sorted(  # type: ignore
-            set([attr["datetime"] for attr in sifd.attrs.values()]), reverse=True
-        )
-    # groups should be sorted in asscending order
-    assert [attr["product"] for attr in groups.attrs] == sorted(
-        set([attr["product"] for attr in sifd.attrs.values()]), reverse=False
-    )
-
-
-@pytest.mark.datafiles(FIXTURE_DIR / "images")
-@pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
-def test_sifd_grid(datafiles) -> None:  # type: ignore
+def test_sifd_index_grid(datafiles) -> None:  # type: ignore
     sifd = StaticImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
@@ -168,3 +123,19 @@ def test_sifd_grid(datafiles) -> None:  # type: ignore
 
     # axes are sorted
     assert grid.product.values.tolist() == sorted(grid.product.values.tolist(), reverse=True)
+
+
+@pytest.mark.datafiles(FIXTURE_DIR / "images")
+@pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
+def test_sifd_grid(datafiles) -> None:  # type: ignore
+    sifd = StaticImageFolderDataset(
+        datafiles,
+        "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
+        georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
+        max_cache=None,
+    )
+
+    grid = sifd.grid(["product", "datetime"], ascending=False)
+
+    assert grid.dataset is sifd
+    assert (grid.index_grid == sifd.index_grid(["product", "datetime"], ascending=False)).all()
