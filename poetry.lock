@@ -991,7 +991,7 @@ jupyter = ["notebook", "ipytree"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "a3e2ee42daa526c6b0c6a670a3764b43ba19ee7f815286d1cdb476778c7273fa"
+content-hash = "ae83bafd10d4d6d6f7a863de09a7a5d22edbbf05813bfcef9835029ecf7f757d"
 
 [metadata.files]
 affine = []
