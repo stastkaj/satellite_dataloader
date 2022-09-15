@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 from pathlib import Path
 
 import numpy as np
@@ -54,14 +54,22 @@ def image2xr(
     return da
 
 
-def tolist(x: Any, none_as_empty_list: bool = True) -> List[Any]:
-    """Convert to list."""
+def tolist(x: Any, none_as_empty_list: bool = True, converter: Optional[Callable[[Any], Any]] = None) -> List[Any]:
+    """Convert to list.
+
+    Optionally convert all elements using the converter function.
+    """
     if none_as_empty_list and x is None:
         return []
 
-    if isinstance(x, list):
-        return x
-    elif isinstance(x, tuple):
-        return list(x)
+    if isinstance(x, (list, tuple)):
+        if not converter:
+            return list(x)
+        else:
+            return [converter(element) for element in x]
     else:
-        return [x]
+        #
+        if not converter:
+            return [x]
+        else:
+            return [converter(x)]

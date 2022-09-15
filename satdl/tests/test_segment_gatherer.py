@@ -1,0 +1,1 @@
+from satdl.datasets._segment_gatherer import SlotDefinition
