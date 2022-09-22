@@ -15,6 +15,11 @@ satpy = "^0.37.0"
 trollsift = "^0.4.0"
 xarray = "^2022.6.0"
 attrs = "^22.1.0"
+cattrs = "^22.1.0"
+importlib-metadata = "^4.12.0"
+importlib-resources = "^5.9.0"
+pyresample = "^1.25.1"
+pyspectral = "^0.11.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -33,6 +33,7 @@ class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType
         self._items = self._find_items()
         self._attrs = {self._item2key(f): self._extract_attrs(f) for f in self._items}
         self._ind2key = {ind: key for ind, key in enumerate(self._attrs)}
+        self._key2ind = {key: ind for ind, key in enumerate(self._attrs)}
 
     @abstractmethod
     def _find_items(self) -> List[ItemType]:
@@ -46,13 +47,13 @@ class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType
     def _item2key(self, item: ItemType) -> KeyType:  # noqa: U100
         """Convert item to its key."""
 
-    @abstractmethod
     def _key2item(self, key: KeyType) -> ItemType:  # noqa: U100
         """Convert key to corresponding item."""
+        return self._items[self._key2ind[key]]
 
     @abstractmethod
     def _get_data(self, key: KeyType) -> DataType:  # noqa: U100
-        """Convert key to data"""
+        """Convert key to data, return None if not possible."""
 
     def __len__(self) -> int:
         return len(self._items)

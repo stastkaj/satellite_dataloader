@@ -1,4 +1,4 @@
-from typing import Any, Dict, Hashable, List, Optional, Set, Tuple
+from typing import Any, Dict, Hashable, List, Optional, Set, Tuple, Union
 from collections import defaultdict
 from enum import Enum
 from functools import partial
@@ -6,11 +6,18 @@ from pathlib import Path
 
 from attrs import define, field, frozen
 from attrs.validators import deep_iterable, instance_of, optional
+from cattrs.preconf.pyyaml import make_converter as make_yaml_converter
 from satpy import Scene
 from trollsift import Parser
 
 from satdl.utils import tolist
 
+yaml_converter = make_yaml_converter()
+# tell cattrs how to (un-) structure Parser
+yaml_converter.register_structure_hook(
+    Parser,
+    lambda data, _: Parser(data)
+)
 
 class SlotState(Enum):
     NotReady = 0  # some required files are missing
@@ -23,15 +30,22 @@ class SlotFiles:
     reader: str
     required_files: List[Path]
     optional_files: List[Path]
-    attrs: Dict[str, Any]
+    attrs: Dict[str, Hashable]
+    _key: Hashable
+
+    @property
+    def key(self) -> Hashable:
+        return self._key or tuple(self.attrs.items())
 
     @classmethod
-    def empty_slot(cls, reader: str, attrs: Dict[str, Any], n_required: int, n_optional: int):
-        return cls(reader=reader, required_files=[None] * n_required, optional_files=[None] * n_optional, attrs=attrs)
+    def empty_slot(cls, reader: str, attrs: Dict[str, Any], n_required: int, n_optional: int,
+                   key: Optional[Hashable] = None):
+        return cls(reader=reader, required_files=[None] * n_required, optional_files=[None] * n_optional, attrs=attrs,
+                   key=key)
 
     @property
     def filenames(self) -> List[Path]:
-        return self.required_files + self.optional_files
+        return [f for f in self.required_files + self.optional_files if f is not None]
 
     @property
     def state(self) -> SlotState:
@@ -50,9 +64,12 @@ class SlotFiles:
     def is_ready(self) -> bool:
         return self.state.value > 0
 
+
+@frozen
+class SatpySlotFiles(SlotFiles):
     @property
     def scene(self) -> Scene:
-        return Scene(reader=self.reader, filenames=self.filename)
+        return Scene(reader=self.reader, filenames=[str(f) for f in self.filenames])
 
 @frozen
 class SlotDefinition:
@@ -69,24 +86,34 @@ class SlotDefinition:
     """
     reader: str
     required_file_masks: List[Parser] = field(
-        converter=partial(tolist, converter=Parser),
-        validate=deep_iterable(instance_of(Parser))
+        converter=partial(tolist),
+        validator=deep_iterable(instance_of(Parser))
     )
     optional_file_masks: Optional[List[Parser]] = field(
-        converter=partial(tolist, converter=Parser),
-        validate=optional(deep_iterable(instance_of(Parser)))
+        converter=partial(tolist),
+        validator=optional(deep_iterable(instance_of(Parser)))
     )
-    ignored_attrs: Optional[Set[str]] = field(
-        converter=lambda x: set(tolist(x)),
-        validate=optional(deep_iterable(instance_of(str)))
+    ignored_attrs: Set[str] = field(
+        converter=lambda x: set(
+            tolist(x)),
+        validator=optional(deep_iterable(instance_of(str)))
     )
 
-    def new_slot(self, attrs: Dict[str, Any]) -> SlotFiles:
-        return SlotFiles.empty_slot(
+    @classmethod
+    def from_yaml_file(cls, path: Union[str, Path]) -> "SlotDefinition":
+        """Construct class from definition in yaml file"""
+        with open(path, "rt", encoding="utf-8") as f:
+            data_as_str = f.read()
+
+        return yaml_converter.loads(data_as_str, cls)
+
+    def new_slot(self, attrs: Dict[str, Any], key: Optional[Hashable] = None) -> SlotFiles:
+        return SatpySlotFiles.empty_slot(
             reader=self.reader,
             attrs=attrs,
             n_required=len(self.required_file_masks),
-            n_optional=len(self.optional_file_masks)
+            n_optional=len(self.optional_file_masks),
+            key=key
         )
 
     def attrs2slot_attrs(self, attrs: Dict[str, Any]) -> Tuple[Tuple[str, Any], ...]:
@@ -98,12 +125,14 @@ class SlotDefinition:
 class SegmentGatherer:
     slot_definition: SlotDefinition
 
-    def gather(self, path: Path) -> Dict[Tuple[Tuple[str, Any], ...], SlotFiles]:
+    def gather(self, path: Union[str, Path]) -> Dict[Tuple[Tuple[str, Any], ...], SlotFiles]:
+        path = Path(path)
+
         # find all files
         all_files = [f for f in path.rglob('*') if f.is_file()]
 
+        # find if a file is required or optional and group them to slots according to their attributes
         slots = {}
-        # find if file is required/optional and group to slots according to their attributes
         for file in all_files:
             for masks, file_list_name in (
                 (self.slot_definition.required_file_masks, 'required_files'),
@@ -120,7 +149,7 @@ class SegmentGatherer:
                     slot_key = self.slot_definition.attrs2slot_attrs(attrs)
                     if slot_key not in slots:
                         # create empty slot
-                        slots[slot_key] = self.slot_definition.new_slot(attrs)
+                        slots[slot_key] = self.slot_definition.new_slot(dict(slot_key))
 
                     # get slot's filename list
                     slot_file_list = getattr(slots[slot_key], file_list_name)

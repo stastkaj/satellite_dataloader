@@ -62,7 +62,7 @@ def tolist(x: Any, none_as_empty_list: bool = True, converter: Optional[Callable
     if none_as_empty_list and x is None:
         return []
 
-    if isinstance(x, (list, tuple)):
+    if isinstance(x, (list, tuple, set)):
         if not converter:
             return list(x)
         else:

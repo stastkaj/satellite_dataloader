@@ -1,5 +1,7 @@
 from .gridded_dataset import GriddedDataset
-from .static_image_folder import StaticImageFolderDataset
+from .image_folder import ImageFolderDataset
+from .satpy_folder import SatpyFolderDataset
+from ._segment_gatherer import SlotDefinition
 
 
-__all__ = ("GriddedDataset", "StaticImageFolderDataset")
+__all__ = ("GriddedDataset", "ImageFolderDataset", "SatpyFolderDataset", "SlotDefinition")
