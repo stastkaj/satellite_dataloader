@@ -8,7 +8,7 @@ from pathlib import Path
 from trollsift import Parser
 import xarray as xr
 
-from satdl.datasets.dataset_base import AttributeDatasetBase
+from satdl.datasets._dataset_base import AttributeDatasetBase
 from satdl.utils import image2xr
 
 
@@ -25,10 +25,10 @@ def _get_get_image(
     return _get_image
 
 
-class StaticImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
+class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
     def __init__(
         self,
-        base_folder: Union[str, Path],
+        base_path: Union[str, Path],
         file_mask: Union[str, Parser],
         georef: Optional[Union[str, Path, xr.DataArray]] = None,
         max_cache: Optional[int] = 0,
@@ -39,17 +39,17 @@ class StaticImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
 
         Parameters
         ----------
-        base_folder : str or Path
+        base_path : str or Path
             root folder of the data
         file_mask : str or trollsift.Parser
             mask of image names specifying attributes in the file name. Must not contain wildcards '*' or '?',
-            should be relatie to base_folder
+            should be relatie to base_path
         georef : str or Path or xr.DataArray or None
             external georeference for plain images, optional
         max_cache: int, optional
             Maximum number of images that will be cached.
         """
-        self._base_folder = Path(base_folder)
+        self._base_path = Path(base_path)
         self._file_mask = Parser(file_mask)
         self._georef = georef  # TODO: validate georeference
         self._relative_key = True
@@ -58,16 +58,14 @@ class StaticImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
 
         self._get_image = lru_cache(max_cache)(_get_get_image(self._georef))
 
-    def _find_items(
-        self, base_folder: Optional[Path] = None, file_mask: Optional[Parser] = None
-    ) -> List[Path]:
-        base_folder = base_folder or self._base_folder
+    def _find_items(self, base_path: Optional[Path] = None, file_mask: Optional[Parser] = None) -> List[Path]:
+        base_path = base_path or self._base_path
         file_mask = file_mask or self._file_mask
 
-        if not base_folder.exists():
-            raise ValueError(f"base folder {base_folder} does not exist.")
+        if not base_path.exists():
+            raise ValueError(f"base folder {base_path} does not exist.")
 
-        return list(base_folder.rglob(file_mask.globify()))
+        return list(base_path.rglob(file_mask.globify()))
 
     def _extract_attrs(self, item: Path, relative: Optional[bool] = None) -> Dict[str, Any]:
         if relative is None:
@@ -78,12 +76,7 @@ class StaticImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
     def _item2key(self, item: Path, relative: Optional[bool] = None) -> str:
         if relative is None:
             relative = self._relative_key
-        return str(item.relative_to(self._base_folder)) if relative else str(item)
-
-    def _key2item(self, key: str, relative: Optional[bool] = None) -> Path:
-        if relative is None:
-            relative = self._relative_key
-        return self._base_folder / key if relative else Path(key)
+        return str(item.relative_to(self._base_path)) if relative else str(item)
 
     def _get_data(self, key: str) -> xr.DataArray:
         """Return data given key."""

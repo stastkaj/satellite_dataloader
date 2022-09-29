@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from satdl.datasets import StaticImageFolderDataset
+from satdl.datasets import ImageFolderDataset
 
 
 FIXTURE_DIR = Path(__file__).parent / "test_data"
@@ -14,7 +14,7 @@ FIXTURE_DIR = Path(__file__).parent / "test_data"
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
 def test_sifd(datafiles) -> None:  # type: ignore
     # can build the object
-    sifd = StaticImageFolderDataset(
+    sifd = ImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
@@ -41,15 +41,15 @@ def test_sifd(datafiles) -> None:  # type: ignore
         assert im.lon.max() < 30.715534
 
     # indexing by integer works
-    assert (sifd.iloc[3] == sifd[list(sifd.keys())[3]]).all()
+    assert (sifd.iloc[3] == sifd[list(sifd.keys())[3]]).all()  # type: ignore
     for data, index in zip(sifd.iloc[3:5], [3, 4]):
-        assert (data == sifd[list(sifd.keys())[index]]).all()
+        assert (data == sifd[list(sifd.keys())[index]]).all()  # type: ignore
 
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
 def test_sifd_iter(datafiles) -> None:  # type: ignore
-    sifd = StaticImageFolderDataset(
+    sifd = ImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
@@ -65,7 +65,7 @@ def test_sifd_iter(datafiles) -> None:  # type: ignore
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
 def test_sifd_cache(datafiles) -> None:  # type: ignore
-    sifd = StaticImageFolderDataset(
+    sifd = ImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
@@ -86,7 +86,7 @@ def test_sifd_cache(datafiles) -> None:  # type: ignore
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
 def test_sifd_index_grid(datafiles) -> None:  # type: ignore
-    sifd = StaticImageFolderDataset(
+    sifd = ImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
@@ -112,7 +112,7 @@ def test_sifd_index_grid(datafiles) -> None:  # type: ignore
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
 def test_sifd_grid(datafiles) -> None:  # type: ignore
-    sifd = StaticImageFolderDataset(
+    sifd = ImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",

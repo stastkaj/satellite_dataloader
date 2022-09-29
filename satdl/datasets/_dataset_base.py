@@ -27,12 +27,13 @@ KeyType = TypeVar("KeyType")
 DataType = TypeVar("DataType")
 
 
-class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType, DataType], ABC):
+class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType, Optional[DataType]], ABC):
     def __init__(self) -> None:
         self.iloc = ILoc(self)
         self._items = self._find_items()
         self._attrs = {self._item2key(f): self._extract_attrs(f) for f in self._items}
         self._ind2key = {ind: key for ind, key in enumerate(self._attrs)}
+        self._key2ind = {key: ind for ind, key in enumerate(self._attrs)}
 
     @abstractmethod
     def _find_items(self) -> List[ItemType]:
@@ -46,13 +47,13 @@ class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType
     def _item2key(self, item: ItemType) -> KeyType:  # noqa: U100
         """Convert item to its key."""
 
-    @abstractmethod
     def _key2item(self, key: KeyType) -> ItemType:  # noqa: U100
         """Convert key to corresponding item."""
+        return self._items[self._key2ind[key]]
 
     @abstractmethod
-    def _get_data(self, key: KeyType) -> DataType:  # noqa: U100
-        """Convert key to data"""
+    def _get_data(self, key: KeyType) -> Optional[DataType]:  # noqa: U100
+        """Convert key to data, return None if not possible."""
 
     def __len__(self) -> int:
         return len(self._items)
@@ -61,7 +62,7 @@ class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType
         """Return all image keys."""
         return self._attrs.keys()
 
-    def items(self) -> ItemsView[KeyType, DataType]:
+    def items(self) -> ItemsView[KeyType, Optional[DataType]]:
         """Return list of (key, attributes) pairs."""
         return dict((key, self[key]) for key in self.keys()).items()
 
@@ -70,9 +71,13 @@ class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType
         """Return dict {key: attrs_dict}."""
         return self._attrs
 
-    def random(self) -> DataType:
+    def random(self, n_retries: int = 1000) -> DataType:
         """Return random image as DataArray"""
-        return self.iloc[np.random.randint(len(self))]
+        for _ in range(n_retries):
+            sample = self.iloc[np.random.randint(len(self))]
+            if sample is not None:
+                return sample
+        raise RuntimeError(f"Did not find valid sample after {n_retries} retries.")
 
     def __iter__(self) -> Generator[KeyType, None, None]:
         return (key for key in self.keys())
@@ -80,7 +85,7 @@ class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType
     def __contains__(self, key: Any) -> bool:
         return key in self._attrs
 
-    def __getitem__(self, key: KeyType) -> DataType:
+    def __getitem__(self, key: KeyType) -> Optional[DataType]:
         """Return data given key."""
         return self._get_data(key)
 
@@ -137,7 +142,7 @@ class AttributeDatasetBase(Generic[ItemType, KeyType, DataType], Mapping[KeyType
         )
 
 
-class ILoc(Sequence[DataType]):
+class ILoc(Sequence[Optional[DataType]]):
     def __init__(self, obj: AttributeDatasetBase[ItemType, KeyType, DataType]) -> None:
         self.obj = obj
 
@@ -145,14 +150,14 @@ class ILoc(Sequence[DataType]):
         return len(self.obj)
 
     @overload
-    def __getitem__(self, index: int) -> DataType:  # noqa: U100
+    def __getitem__(self, index: int) -> Optional[DataType]:  # noqa: U100
         ...
 
     @overload
-    def __getitem__(self, index: slice) -> List[DataType]:  # noqa: U100
+    def __getitem__(self, index: slice) -> List[Optional[DataType]]:  # noqa: U100
         ...
 
-    def __getitem__(self, index: Union[int, slice]) -> Union[DataType, List[DataType]]:
+    def __getitem__(self, index: Union[int, slice]) -> Union[Optional[DataType], List[Optional[DataType]]]:
         """Return data of i-th element.
 
         Raises IndexError if i >= len(obj)
