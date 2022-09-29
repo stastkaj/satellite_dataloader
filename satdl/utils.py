@@ -54,7 +54,9 @@ def image2xr(
     return da
 
 
-def tolist(x: Any, none_as_empty_list: bool = True, converter: Optional[Callable[[Any], Any]] = None) -> List[Any]:
+def tolist(
+    x: Any, none_as_empty_list: bool = True, converter: Optional[Callable[[Any], Any]] = None
+) -> List[Any]:
     """Convert to list.
 
     Optionally convert all elements using the converter function.

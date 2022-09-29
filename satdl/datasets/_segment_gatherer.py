@@ -1,10 +1,9 @@
 from typing import Any, Dict, Hashable, List, Optional, Set, Tuple, Union
-from collections import defaultdict
 from enum import Enum
 from functools import partial
 from pathlib import Path
 
-from attrs import define, field, frozen
+from attrs import field, frozen
 from attrs.validators import deep_iterable, instance_of, optional
 from cattrs.preconf.pyyaml import make_converter as make_yaml_converter
 from satpy import Scene
@@ -12,21 +11,22 @@ from trollsift import Parser
 
 from satdl.utils import tolist
 
+
 yaml_converter = make_yaml_converter()
 # tell cattrs how to (un-) structure Parser
-yaml_converter.register_structure_hook(
-    Parser,
-    lambda data, _: Parser(data)
-)
+yaml_converter.register_structure_hook(Parser, lambda data, _: Parser(data))
+
 
 class SlotState(Enum):
     NotReady = 0  # some required files are missing
-    Ready = 1     # all required files are ready, some optional are missing
+    Ready = 1  # all required files are ready, some optional are missing
     Complete = 2  # all required and optional files are missing
+
 
 @frozen
 class SlotFiles:
     """List of files belonging to a single slot that can create SatpyScene."""
+
     reader: str
     required_files: List[Path]
     optional_files: List[Path]
@@ -38,10 +38,21 @@ class SlotFiles:
         return self._key or tuple(self.attrs.items())
 
     @classmethod
-    def empty_slot(cls, reader: str, attrs: Dict[str, Any], n_required: int, n_optional: int,
-                   key: Optional[Hashable] = None):
-        return cls(reader=reader, required_files=[None] * n_required, optional_files=[None] * n_optional, attrs=attrs,
-                   key=key)
+    def empty_slot(
+        cls,
+        reader: str,
+        attrs: Dict[str, Any],
+        n_required: int,
+        n_optional: int,
+        key: Optional[Hashable] = None,
+    ):
+        return cls(
+            reader=reader,
+            required_files=[None] * n_required,
+            optional_files=[None] * n_optional,
+            attrs=attrs,
+            key=key,
+        )
 
     @property
     def filenames(self) -> List[Path]:
@@ -71,6 +82,7 @@ class SatpySlotFiles(SlotFiles):
     def scene(self) -> Scene:
         return Scene(reader=self.reader, filenames=[str(f) for f in self.filenames])
 
+
 @frozen
 class SlotDefinition:
     """List of file masks belonging to a single slot with specification required/optional.
@@ -84,19 +96,16 @@ class SlotDefinition:
         ignored_attrs: Values of these attributes are not considered when deciding whether
             two files belong to the same slot
     """
+
     reader: str
     required_file_masks: List[Parser] = field(
-        converter=partial(tolist),
-        validator=deep_iterable(instance_of(Parser))
+        converter=partial(tolist), validator=deep_iterable(instance_of(Parser))
     )
     optional_file_masks: Optional[List[Parser]] = field(
-        converter=partial(tolist),
-        validator=optional(deep_iterable(instance_of(Parser)))
+        converter=partial(tolist), validator=optional(deep_iterable(instance_of(Parser)))
     )
     ignored_attrs: Set[str] = field(
-        converter=lambda x: set(
-            tolist(x)),
-        validator=optional(deep_iterable(instance_of(str)))
+        converter=lambda x: set(tolist(x)), validator=optional(deep_iterable(instance_of(str)))
     )
 
     @classmethod
@@ -113,7 +122,7 @@ class SlotDefinition:
             attrs=attrs,
             n_required=len(self.required_file_masks),
             n_optional=len(self.optional_file_masks),
-            key=key
+            key=key,
         )
 
     def attrs2slot_attrs(self, attrs: Dict[str, Any]) -> Tuple[Tuple[str, Any], ...]:
@@ -129,14 +138,14 @@ class SegmentGatherer:
         path = Path(path)
 
         # find all files
-        all_files = [f for f in path.rglob('*') if f.is_file()]
+        all_files = [f for f in path.rglob("*") if f.is_file()]
 
         # find if a file is required or optional and group them to slots according to their attributes
         slots = {}
         for file in all_files:
             for masks, file_list_name in (
-                (self.slot_definition.required_file_masks, 'required_files'),
-                (self.slot_definition.optional_file_masks, 'optional_files')
+                (self.slot_definition.required_file_masks, "required_files"),
+                (self.slot_definition.optional_file_masks, "optional_files"),
             ):
                 found = False
                 for imask, mask in enumerate(masks):

@@ -58,9 +58,7 @@ class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
 
         self._get_image = lru_cache(max_cache)(_get_get_image(self._georef))
 
-    def _find_items(
-        self, base_path: Optional[Path] = None, file_mask: Optional[Parser] = None
-    ) -> List[Path]:
+    def _find_items(self, base_path: Optional[Path] = None, file_mask: Optional[Parser] = None) -> List[Path]:
         base_path = base_path or self._base_path
         file_mask = file_mask or self._file_mask
 

@@ -9,9 +9,7 @@ _georef = image2xr(_georef_path)
 
 
 def test_slt() -> None:
-    image_dataset = ImageFolderDataset(
-        _data_path, file_mask=_image_file_mask, georef=_georef, max_cache=100
-    )
+    image_dataset = ImageFolderDataset(_data_path, file_mask=_image_file_mask, georef=_georef, max_cache=100)
     # use xarray to create rectangular grid of data indexes with coordinates product and datetime
     image_dataloader = image_dataset.grid(["product", "datetime"], ascending=True)
 
