@@ -25,23 +25,11 @@ class SatpyProductFiles:
 
 class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArray]):
     _forbidden_composites_wo_area = [
-        "cloud_phase_distinction",
-        "cloud_phase_distinction_raw",
-        "hrv_clouds",
-        "hrv_fog",
-        "hrv_severe_storms",
-        "hrv_severe_storms_masked",
         "ir108_3d",
-        "ir_sandwich",
         "natural_color_with_night_ir",
-        "natural_color_with_night_ir_hires",
         "natural_enh_with_night_ir",
-        "natural_enh_with_night_ir_hires",
         "night_ir_with_background",
-        "night_ir_with_background_hires",
-        "realistic_colors",
-        "vis_sharpened_ir",
-    ]  # TODO: find why it does not work, move the list to some config file
+    ]  # TODO: find why these do not work, move the list to some config file
 
     def __init__(
         self,
@@ -82,6 +70,11 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         scn.load([item.product])
         if area:
             scn = scn.resample(area)
+        else:
+            # composites of channels with different resolution would not work without resampling,
+            # average the high-resolution channels
+            # TODO: finest_area or coarsest_area? Note also the satpy bug https://github.com/pytroll/satpy/issues/1595
+            scn = scn.resample(scn.finest_area(), resampler="native")
 
         da = get_enhanced_image(scn[item.product]).data
         da = da.transpose("bands", "y", "x")
