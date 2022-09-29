@@ -41,9 +41,9 @@ def test_sifd(datafiles) -> None:  # type: ignore
         assert im.lon.max() < 30.715534
 
     # indexing by integer works
-    assert (sifd.iloc[3] == sifd[list(sifd.keys())[3]]).all()
+    assert (sifd.iloc[3] == sifd[list(sifd.keys())[3]]).all()  # type: ignore
     for data, index in zip(sifd.iloc[3:5], [3, 4]):
-        assert (data == sifd[list(sifd.keys())[index]]).all()
+        assert (data == sifd[list(sifd.keys())[index]]).all()  # type: ignore
 
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Generator, Optional, Tuple
 import os
 from pathlib import Path
 
@@ -11,7 +11,7 @@ from satdl.datasets import SatpyFolderDataset, SlotDefinition
 
 
 @pytest.fixture
-def slot_definition() -> SlotDefinition:
+def slot_definition() -> Generator[SlotDefinition, None, None]:
     with resources.as_file(resources.files("satdl") / "definitions" / "slot_MSG_CE.yaml") as path:
         yield SlotDefinition.from_yaml_file(path)
 
@@ -26,7 +26,9 @@ def hrit_path() -> Path:
 
 
 @pytest.mark.parametrize("area", [(None, None), ("eurotv4n", (1152, 2048))])
-def test_satpy_folder(hrit_path: Path, slot_definition: SlotDefinition, area: Optional[str]) -> None:
+def test_satpy_folder(
+    hrit_path: Path, slot_definition: SlotDefinition, area: Tuple[Optional[str], Optional[Tuple[int, int]]]
+) -> None:
     ds = SatpyFolderDataset(hrit_path, slot_definition, area=area[0])
 
     # some data were actually loaded

@@ -1,3 +1,4 @@
+from typing import Generator
 from collections import abc
 import os
 from pathlib import Path
@@ -9,7 +10,7 @@ from satdl.datasets._segment_gatherer import SegmentGatherer, SlotDefinition
 
 
 @pytest.fixture
-def slot_definition() -> SlotDefinition:
+def slot_definition() -> Generator[SlotDefinition, None, None]:
     with resources.as_file(resources.files("satdl") / "definitions" / "slot_MSG_CE.yaml") as path:
         yield SlotDefinition.from_yaml_file(path)
 
@@ -26,6 +27,7 @@ def hrit_path() -> Path:
 def test_slot_definition_from_yaml(slot_definition: SlotDefinition) -> None:
     # HRV + 11 channels + EPI + PRO
     assert len(slot_definition.required_file_masks) == 9 + 11 * 3 + 2
+    assert slot_definition.optional_file_masks is not None
     assert len(slot_definition.optional_file_masks) == 11 * 5
     assert slot_definition.reader == "seviri_l1b_hrit"
     assert len(slot_definition.ignored_attrs) == 0

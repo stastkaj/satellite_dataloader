@@ -1,6 +1,5 @@
 from typing import Any, Dict, Hashable, List, Optional, Set, Tuple, Union
 from enum import Enum
-from functools import partial
 from pathlib import Path
 
 from attrs import field, frozen
@@ -28,8 +27,8 @@ class SlotFiles:
     """List of files belonging to a single slot that can create SatpyScene."""
 
     reader: str
-    required_files: List[Path]
-    optional_files: List[Path]
+    required_files: List[Optional[Path]]
+    optional_files: List[Optional[Path]]
     attrs: Dict[str, Hashable]
     _key: Hashable
 
@@ -45,7 +44,7 @@ class SlotFiles:
         n_required: int,
         n_optional: int,
         key: Optional[Hashable] = None,
-    ):
+    ) -> "SlotFiles":
         return cls(
             reader=reader,
             required_files=[None] * n_required,
@@ -84,7 +83,7 @@ class SatpySlotFiles(SlotFiles):
 
 
 @frozen
-class SlotDefinition:
+class SlotDefinition:  # type:ignore
     """List of file masks belonging to a single slot with specification required/optional.
 
     Slot = set of files with non-conflicting values of their attributes.
@@ -98,14 +97,12 @@ class SlotDefinition:
     """
 
     reader: str
-    required_file_masks: List[Parser] = field(
-        converter=partial(tolist), validator=deep_iterable(instance_of(Parser))
-    )
+    required_file_masks: List[Parser] = field(converter=tolist, validator=deep_iterable(instance_of(Parser)))
     optional_file_masks: Optional[List[Parser]] = field(
-        converter=partial(tolist), validator=optional(deep_iterable(instance_of(Parser)))
+        converter=tolist, validator=optional(deep_iterable(instance_of(Parser)))  # type: ignore
     )
-    ignored_attrs: Set[str] = field(
-        converter=lambda x: set(tolist(x)), validator=optional(deep_iterable(instance_of(str)))
+    ignored_attrs: Set[str] = field(  # type: ignore
+        converter=lambda x: set(tolist(x)), validator=optional(deep_iterable(instance_of(str)))  # type: ignore
     )
 
     @classmethod
@@ -121,7 +118,7 @@ class SlotDefinition:
             reader=self.reader,
             attrs=attrs,
             n_required=len(self.required_file_masks),
-            n_optional=len(self.optional_file_masks),
+            n_optional=len(self.optional_file_masks) if self.optional_file_masks else 0,
             key=key,
         )
 
@@ -134,7 +131,7 @@ class SlotDefinition:
 class SegmentGatherer:
     slot_definition: SlotDefinition
 
-    def gather(self, path: Union[str, Path]) -> Dict[Tuple[Tuple[str, Any], ...], SlotFiles]:
+    def gather(self, path: Union[str, Path]) -> Dict[Tuple[Tuple[str, Any], ...], SatpySlotFiles]:
         path = Path(path)
 
         # find all files
@@ -145,7 +142,7 @@ class SegmentGatherer:
         for file in all_files:
             for masks, file_list_name in (
                 (self.slot_definition.required_file_masks, "required_files"),
-                (self.slot_definition.optional_file_masks, "optional_files"),
+                (self.slot_definition.optional_file_masks or [], "optional_files"),
             ):
                 found = False
                 for imask, mask in enumerate(masks):
@@ -176,4 +173,4 @@ class SegmentGatherer:
                     break
 
         # return only those slots that are ready
-        return {attrs: slot for attrs, slot in slots.items() if slot.is_ready}
+        return {attrs: slot for attrs, slot in slots.items() if slot.is_ready}  # type: ignore

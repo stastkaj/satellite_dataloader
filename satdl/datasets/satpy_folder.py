@@ -73,7 +73,8 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         else:
             # composites of channels with different resolution would not work without resampling,
             # average the high-resolution channels
-            # TODO: finest_area or coarsest_area? Note also the satpy bug https://github.com/pytroll/satpy/issues/1595
+            # TODO: finest_area or coarsest_area? Note also the satpy bug
+            # https://github.com/pytroll/satpy/issues/1595
             scn = scn.resample(scn.finest_area(), resampler="native")
 
         da = get_enhanced_image(scn[item.product]).data
@@ -122,7 +123,7 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
     def _item2key(self, item: SatpyProductFiles) -> str:
         return f"{item.product}|{item.slot_files.key}"
 
-    def _get_data(self, key: str) -> xr.DataArray:
+    def _get_data(self, key: str) -> Optional[xr.DataArray]:
         """Return data given key, return None if not possible."""
         try:
             da = self._get_image(self._key2item(key))
