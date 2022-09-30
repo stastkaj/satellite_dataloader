@@ -50,7 +50,7 @@ class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
             Maximum number of images that will be cached.
         """
         self._base_path = Path(base_path)
-        self._file_mask = Parser(file_mask)
+        self._file_mask = Parser(file_mask) if not isinstance(file_mask, Parser) else file_mask
         self._georef = georef  # TODO: validate georeference
         self._relative_key = True
 
