@@ -77,7 +77,8 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
             # https://github.com/pytroll/satpy/issues/1595
             scn = scn.resample(scn.finest_area(), resampler="native")
 
-        da = get_enhanced_image(scn[item.product]).data
+        product = scn[item.product]
+        da = get_enhanced_image(product).data
         da = da.transpose("bands", "y", "x")
         # TODO: make this optional, have a switch: all RGB, RGBA, BW, BWA, any
         if len(da.bands) == 4:
@@ -90,6 +91,10 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         elif len(da.bands) == 1:
             # L -> RGB
             da = xr.concat([da] * 3, dim="bands")
+
+        lon, lat = product.attrs["area"].get_lonlats()
+        da.coords["lon"] = (("x", "y"), lon)
+        da.coords["lat"] = (("x", "y"), lat)
 
         return da
 
