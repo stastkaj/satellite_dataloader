@@ -93,8 +93,8 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
             da = xr.concat([da] * 3, dim="bands")
 
         lon, lat = product.attrs["area"].get_lonlats()
-        da.coords["lon"] = (("x", "y"), lon)
-        da.coords["lat"] = (("x", "y"), lat)
+        da.coords["lon"] = (("y", "x"), lon)
+        da.coords["lat"] = (("y", "x"), lat)
 
         return da
 
