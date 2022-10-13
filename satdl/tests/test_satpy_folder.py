@@ -1,4 +1,5 @@
 from typing import Generator, Optional, Tuple
+from logging import getLogger
 import os
 from pathlib import Path
 
@@ -8,6 +9,9 @@ import pytest
 import xarray as xr
 
 from satdl.datasets import SatpyFolderDataset, SlotDefinition
+
+
+logger = getLogger()
 
 
 @pytest.fixture
@@ -58,5 +62,8 @@ def test_satpy_folder(
             assert data.shape == (3, *area[1])
         else:
             assert data.shape[0] == 3
-
-        del data
+        # has lon, lat coordinates
+        for coord in ["lon", "lat"]:
+            assert coord in data.coords
+            assert data.coords[coord].dims == ("x", "y")
+        logger.info(f'Tested {data_key.split("|")[0]} product.')
