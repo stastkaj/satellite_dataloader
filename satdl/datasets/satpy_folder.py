@@ -100,7 +100,7 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         da.coords["lon"] = (("y", "x"), lon)
         da.coords["lat"] = (("y", "x"), lat)
 
-        return da
+        return da.persist()  # load data into memory
 
     def _find_items(
         self, base_path: Optional[Path] = None, slot_definition: Optional[SlotDefinition] = None
