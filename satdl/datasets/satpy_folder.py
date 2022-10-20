@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Union
-from functools import partial
+from functools import lru_cache, partial
 import logging
 from pathlib import Path
 
@@ -35,8 +35,8 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         self,
         base_path: Union[str, Path],
         slot_definition: SlotDefinition,
-        area: Optional[Union[str, AreaDefinition]]
-        # max_cache: Optional[int] = None
+        area: Optional[Union[str, AreaDefinition]],
+        max_cache: Optional[int] = None,
     ) -> None:
         """Dataset of satpy products in a local folder.
 
@@ -50,8 +50,8 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
             Definition of satpy files belonging to a single slot.
         area:
             Projection of the resulting image. Optional.
-        # max_cache: int, optional
-        #     Maximum number of images that will be cached.
+        max_cache: int, optional
+            Maximum number of images that will be cached.
         """
         self._base_path = Path(base_path)
         self._slot_definition = slot_definition
@@ -59,11 +59,15 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
 
         super().__init__()
 
-        # self._get_image = lru_cache(max_cache)(SatpyFolderDataset.data2image)
-        self._get_image = partial(self.data2image, area=area)
+        if max_cache is None:
+            max_cache = 0
+        self._get_image = lru_cache(max_cache)(partial(self._data2image, area=area))
 
-    def data2image(self, item: SatpyProductFiles, area: Optional[Union[str, AreaDefinition]]) -> xr.DataArray:
+    def _data2image(
+        self, item: SatpyProductFiles, area: Optional[Union[str, AreaDefinition]]
+    ) -> xr.DataArray:
         """Convert item to image, return None if not possible."""
+        _logger.debug(f"loading satpy item {item}")
         area = area or self._area
 
         scn = item.slot_files.scene

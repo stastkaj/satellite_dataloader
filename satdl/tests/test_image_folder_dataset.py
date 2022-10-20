@@ -65,6 +65,8 @@ def test_sifd_iter(datafiles) -> None:  # type: ignore
 @pytest.mark.datafiles(FIXTURE_DIR / "images")
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
 def test_sifd_cache(datafiles) -> None:  # type: ignore
+    import time
+
     sifd = ImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
@@ -72,15 +74,21 @@ def test_sifd_cache(datafiles) -> None:  # type: ignore
         max_cache=50,
     )
 
+    t1 = time.perf_counter_ns()
     for key in sifd.keys():
         im = sifd[key]
 
         assert isinstance(im, xr.DataArray)
+    dt1 = time.perf_counter_ns() - t1
 
+    t2 = time.perf_counter_ns()
     for key in sifd.keys():
         im = sifd[key]
 
         assert isinstance(im, xr.DataArray)
+    dt2 = time.perf_counter_ns() - t2
+
+    assert dt2 < dt1
 
 
 @pytest.mark.datafiles(FIXTURE_DIR / "images")

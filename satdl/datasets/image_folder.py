@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, Union
-from functools import lru_cache
+from typing import Any, Dict, List, Optional, Union
+from functools import lru_cache, partial
 import logging
 from pathlib import Path
 
@@ -15,23 +15,13 @@ from satdl.utils import image2xr
 _logger = logging.getLogger(__name__)
 
 
-def _get_get_image(
-    georef: Optional[Union[str, Path, xr.DataArray]]
-) -> Callable[[Union[str, Path]], xr.DataArray]:
-    def _get_image(path: Union[str, Path]) -> xr.DataArray:
-        _logger.debug(f"loading georeferenced image {path}")
-        return image2xr(path, georef=georef).load()
-
-    return _get_image
-
-
 class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
     def __init__(
         self,
         base_path: Union[str, Path],
         file_mask: Union[str, Parser],
         georef: Optional[Union[str, Path, xr.DataArray]] = None,
-        max_cache: Optional[int] = 0,
+        max_cache: Optional[int] = None,
     ) -> None:
         """Dataset of georeferenced images in a local folder.
 
@@ -56,7 +46,15 @@ class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
 
         super().__init__()
 
-        self._get_image = lru_cache(max_cache)(_get_get_image(self._georef))
+        if max_cache is None:
+            max_cache = 0
+        self._get_image = lru_cache(max_cache)(partial(self._data2image, georef=self._georef))
+
+    def _data2image(
+        self, path: Union[str, Path], georef: Optional[Union[str, Path, xr.DataArray]]
+    ) -> xr.DataArray:
+        _logger.debug(f"loading georeferenced image {path}")
+        return image2xr(path, georef=georef).load()
 
     def _find_items(self, base_path: Optional[Path] = None, file_mask: Optional[Parser] = None) -> List[Path]:
         base_path = base_path or self._base_path
