@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from functools import lru_cache, partial
 import logging
 from pathlib import Path
@@ -50,7 +50,9 @@ class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
             max_cache = 0
         self._get_image = lru_cache(max_cache)(partial(self._data2image, georef=self._georef))
 
-    def _data2image(self, path: Union[str, Path], georef: Optional[Union[str, Path, xr.DataArray]]) -> xr.DataArray:
+    def _data2image(
+        self, path: Union[str, Path], georef: Optional[Union[str, Path, xr.DataArray]]
+    ) -> xr.DataArray:
         _logger.debug(f"loading georeferenced image {path}")
         return image2xr(path, georef=georef).load()
 

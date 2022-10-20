@@ -36,7 +36,7 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         base_path: Union[str, Path],
         slot_definition: SlotDefinition,
         area: Optional[Union[str, AreaDefinition]],
-        max_cache: Optional[int] = None
+        max_cache: Optional[int] = None,
     ) -> None:
         """Dataset of satpy products in a local folder.
 
@@ -63,7 +63,9 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
             max_cache = 0
         self._get_image = lru_cache(max_cache)(partial(self._data2image, area=area))
 
-    def _data2image(self, item: SatpyProductFiles, area: Optional[Union[str, AreaDefinition]]) -> xr.DataArray:
+    def _data2image(
+        self, item: SatpyProductFiles, area: Optional[Union[str, AreaDefinition]]
+    ) -> xr.DataArray:
         """Convert item to image, return None if not possible."""
         _logger.debug(f"loading satpy item {item}")
         area = area or self._area

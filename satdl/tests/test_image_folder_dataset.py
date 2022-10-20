@@ -66,6 +66,7 @@ def test_sifd_iter(datafiles) -> None:  # type: ignore
 @pytest.mark.datafiles(FIXTURE_DIR / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif")
 def test_sifd_cache(datafiles) -> None:  # type: ignore
     import time
+
     sifd = ImageFolderDataset(
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",

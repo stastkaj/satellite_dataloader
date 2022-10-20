@@ -30,12 +30,18 @@ def hrit_path() -> Path:
     return Path(path)
 
 
-@pytest.mark.parametrize("area_tuple", [(None, None), ("eurotv4n", (1152, 2048))], ids=['no_projection', 'projection'])
+@pytest.mark.parametrize(
+    "area_tuple", [(None, None), ("eurotv4n", (1152, 2048))], ids=["no_projection", "projection"]
+)
 def test_satpy_folder(
-    hrit_path: Path, slot_definition: SlotDefinition, area_tuple: Tuple[Optional[str], Optional[Tuple[int, int]]]
+    hrit_path: Path,
+    slot_definition: SlotDefinition,
+    area_tuple: Tuple[Optional[str], Optional[Tuple[int, int]]],
 ) -> None:
     area, area_shape = area_tuple
-    ds = SatpyFolderDataset(hrit_path, slot_definition, area=area, max_cache=0) # turn off caching to save memory
+    ds = SatpyFolderDataset(
+        hrit_path, slot_definition, area=area, max_cache=0
+    )  # turn off caching to save memory
 
     # some data were actually loaded
     assert len(ds) > 0
@@ -51,7 +57,9 @@ def test_satpy_folder(
         "natural_enh_with_night_ir_hires",
         "night_ir_with_background_hires",
     ]  # this composite is too memory intensive -> skip
-    data_keys = [data_key for data_key in list(ds) if data_key.split("|")[0] not in memory_intensive_data_keys]
+    data_keys = [
+        data_key for data_key in list(ds) if data_key.split("|")[0] not in memory_intensive_data_keys
+    ]
     data_keys = random.choices(data_keys, k=2)
 
     for data_key in data_keys:
@@ -72,12 +80,11 @@ def test_satpy_folder(
         logger.info(f'Tested {data_key.split("|")[0]} product.')
 
 
-@pytest.mark.parametrize("area", ["eurotv4n"], ids=['projection'])
-def test_satpy_folder_caching(
-    hrit_path: Path, slot_definition: SlotDefinition, area: Optional[str]
-) -> None:
+@pytest.mark.parametrize("area", ["eurotv4n"], ids=["projection"])
+def test_satpy_folder_caching(hrit_path: Path, slot_definition: SlotDefinition, area: Optional[str]) -> None:
     import time
-    ds = SatpyFolderDataset(hrit_path, slot_definition, area=area, max_cache=50) # turn on caching
+
+    ds = SatpyFolderDataset(hrit_path, slot_definition, area=area, max_cache=50)  # turn on caching
 
     # getitem returns array with some data - test on 2 random products
     memory_intensive_data_keys = [
@@ -85,7 +92,9 @@ def test_satpy_folder_caching(
         "natural_enh_with_night_ir_hires",
         "night_ir_with_background_hires",
     ]  # this composite is too memory intensive -> skip
-    data_keys = [data_key for data_key in list(ds) if data_key.split("|")[0] not in memory_intensive_data_keys]
+    data_keys = [
+        data_key for data_key in list(ds) if data_key.split("|")[0] not in memory_intensive_data_keys
+    ]
     data_key = random.choice(data_keys)
 
     t1 = time.perf_counter_ns()

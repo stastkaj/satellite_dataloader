@@ -55,9 +55,9 @@ class SlotFiles:
     ) -> "SlotFiles":
         return cls(
             reader=reader,
-            required_files=(None, ) * n_required,
-            optional_files=(None, ) * n_optional,
-            attrs_items=attrs.items(),
+            required_files=(None,) * n_required,  # type: ignore
+            optional_files=(None,) * n_optional,  # type: ignore
+            attrs_items=attrs.items(),  # type: ignore
             key=key,
         )
 
