@@ -2,7 +2,7 @@ from typing import Any, Dict, Hashable, List, Optional, Set, Tuple, Union
 from enum import Enum
 from pathlib import Path
 
-from attrs import field, frozen
+from attrs import evolve, field, frozen
 from attrs.validators import deep_iterable, instance_of, optional
 from cattrs.preconf.pyyaml import make_converter as make_yaml_converter
 from satpy import Scene
@@ -24,17 +24,25 @@ class SlotState(Enum):
 
 @frozen
 class SlotFiles:
-    """List of files belonging to a single slot that can create SatpyScene."""
+    """List of files belonging to a single slot that can create SatpyScene.
+
+    Attributes are immutable and hashable, which makes the whole class hashable.
+    If you want to change their values, use attrs.evolve
+    """
 
     reader: str
-    required_files: List[Optional[Path]]
-    optional_files: List[Optional[Path]]
-    attrs: Dict[str, Hashable]
+    required_files: Tuple[Optional[Path]] = field(converter=tuple)
+    optional_files: Tuple[Optional[Path]] = field(converter=tuple)
+    attrs_items: Tuple[Tuple[str, Hashable], ...] = field(converter=tuple)
     _key: Hashable
 
     @property
+    def attrs(self) -> Dict[str, Hashable]:
+        return dict(self.attrs_items)
+
+    @property
     def key(self) -> Hashable:
-        return self._key or tuple(self.attrs.items())
+        return self._key or self.attrs_items
 
     @classmethod
     def empty_slot(
@@ -47,9 +55,9 @@ class SlotFiles:
     ) -> "SlotFiles":
         return cls(
             reader=reader,
-            required_files=[None] * n_required,
-            optional_files=[None] * n_optional,
-            attrs=attrs,
+            required_files=(None, ) * n_required,
+            optional_files=(None, ) * n_optional,
+            attrs_items=attrs.items(),
             key=key,
         )
 
@@ -158,7 +166,7 @@ class SegmentGatherer:
                         slots[slot_key] = self.slot_definition.new_slot(dict(slot_key))
 
                     # get slot's filename list
-                    slot_file_list = getattr(slots[slot_key], file_list_name)
+                    slot_file_list = list(getattr(slots[slot_key], file_list_name))
                     if slot_file_list[imask] is not None:
                         # found duplicate file
                         # TODO: raise or warn
@@ -166,6 +174,7 @@ class SegmentGatherer:
 
                     # save filename and break
                     slot_file_list[imask] = file
+                    slots[slot_key] = evolve(slots[slot_key], **{file_list_name: slot_file_list})
                     found = True
                     break
 
