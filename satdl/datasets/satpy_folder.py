@@ -10,6 +10,7 @@ from pyresample import AreaDefinition
 from satpy.writers import get_enhanced_image
 import xarray as xr
 
+from satdl.core.enums import OutputMode
 from satdl.datasets._dataset_base import AttributeDatasetBase
 from satdl.datasets._segment_gatherer import SatpySlotFiles, SegmentGatherer, SlotDefinition
 
@@ -37,6 +38,7 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         slot_definition: SlotDefinition,
         area: Optional[Union[str, AreaDefinition]],
         max_cache: Optional[int] = None,
+        output_mode: OutputMode = OutputMode.xrimage,
     ) -> None:
         """Dataset of satpy products in a local folder.
 
@@ -52,10 +54,13 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
             Projection of the resulting image. Optional.
         max_cache: int, optional
             Maximum number of images that will be cached.
+        output_mode: OutputMode
+            Type of the output data.
         """
         self._base_path = Path(base_path)
         self._slot_definition = slot_definition
         self._area = area
+        self.output_mode = output_mode
 
         super().__init__()
 
@@ -66,7 +71,10 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
     def _data2image(
         self, item: SatpyProductFiles, area: Optional[Union[str, AreaDefinition]]
     ) -> xr.DataArray:
-        """Convert item to image, return None if not possible."""
+        """Convert item to image, return None if not possible.
+
+        :raises NotImplementedError: Unsupported output mode.
+        """
         _logger.debug(f"loading satpy item {item}")
         area = area or self._area
 
@@ -82,19 +90,13 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
             scn = scn.resample(scn.finest_area(), resampler="native")
 
         product = scn[item.product]
-        da = get_enhanced_image(product).data
-        da = da.transpose("bands", "y", "x")
-        # TODO: make this optional, have a switch: all RGB, RGBA, BW, BWA, any
-        if len(da.bands) == 4:
-            # RGBA -> RGB
-            da = da.isel(bands=slice(0, 3))
-        elif len(da.bands) == 2:
-            # LA -> L
-            da = da.isel(bands=slice(0, 1))
-            da = xr.concat([da] * 3, dim="bands")
-        elif len(da.bands) == 1:
-            # L -> RGB
-            da = xr.concat([da] * 3, dim="bands")
+        if self.output_mode == OutputMode.xrimage:
+            da = get_enhanced_image(product)
+            da = da.convert("RGB")  # TODO: make this optional, have a switch: all RGB, RGBA, BW, BWA, any
+            # TODO: allow selecting the fill_value or RGBA mode
+            da = da.finalize(fill_value=0)[0]  # convert values to 0..255
+        else:
+            raise NotImplementedError(f"Output mode {self.output_mode} not implemented.")
 
         lon, lat = product.attrs["area"].get_lonlats()
         da.coords["lon"] = (("y", "x"), lon)
