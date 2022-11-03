@@ -78,6 +78,9 @@ def test_satpy_folder(
             assert coord in data.coords
             assert data.coords[coord].dims == ("y", "x")
         logger.info(f'Tested {data_key.split("|")[0]} product.')
+        assert data.dtype == np.uint8
+        assert data.max() <= 255
+        assert data.min() >= 0
 
 
 @pytest.mark.parametrize("area", ["eurotv4n"], ids=["projection"])
