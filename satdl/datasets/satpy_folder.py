@@ -81,7 +81,7 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         scn = item.slot_files.scene
         scn.load([item.product])
         if area:
-            scn = scn.resample(area)
+            scn = scn.resample(area, radius_of_influence=5000)
         else:
             # composites of channels with different resolution would not work without resampling,
             # average the high-resolution channels
