@@ -1,4 +1,5 @@
 from typing import Generator, Optional, Tuple
+from functools import lru_cache
 from logging import getLogger
 import os
 from pathlib import Path
@@ -39,9 +40,7 @@ def test_satpy_folder(
     area_tuple: Tuple[Optional[str], Optional[Tuple[int, int]]],
 ) -> None:
     area, area_shape = area_tuple
-    ds = SatpyFolderDataset(
-        hrit_path, slot_definition, area=area, max_cache=0
-    )  # turn off caching to save memory
+    ds = SatpyFolderDataset(hrit_path, slot_definition, area=area)  # do not use caching to save memory
 
     # some data were actually loaded
     assert len(ds) > 0
@@ -87,7 +86,7 @@ def test_satpy_folder(
 def test_satpy_folder_caching(hrit_path: Path, slot_definition: SlotDefinition, area: Optional[str]) -> None:
     import time
 
-    ds = SatpyFolderDataset(hrit_path, slot_definition, area=area, max_cache=50)  # turn on caching
+    ds = SatpyFolderDataset(hrit_path, slot_definition, area=area, cache=lru_cache(50))  # turn on caching
 
     # getitem returns array with some data - test on 2 random products
     memory_intensive_data_keys = [

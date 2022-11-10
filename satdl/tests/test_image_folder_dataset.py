@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -71,7 +72,7 @@ def test_sifd_cache(datafiles) -> None:  # type: ignore
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
-        max_cache=50,
+        cache=lru_cache(50),
     )
 
     t1 = time.perf_counter_ns()
@@ -98,7 +99,7 @@ def test_sifd_index_grid(datafiles) -> None:  # type: ignore
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
-        max_cache=None,
+        cache=None,
     )
 
     grid = sifd.index_grid(["product", "datetime"], ascending=False)
@@ -124,7 +125,7 @@ def test_sifd_grid(datafiles) -> None:  # type: ignore
         datafiles,
         "{projection}-{resolution}.{product}.{datetime:%Y%m%d.%H%M}.0.jpg",
         georef=Path(datafiles) / "201911271130_MSG4_msgce_1160x800_geotiff_hrv.tif",
-        max_cache=None,
+        cache=None,
     )
 
     grid = sifd.grid(["product", "datetime"], ascending=False)

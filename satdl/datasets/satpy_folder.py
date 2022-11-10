@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Union
-from functools import lru_cache, partial
+from typing import Any, Callable, Dict, List, Optional, Union
+from functools import partial
 import logging
 from pathlib import Path
 
@@ -37,8 +37,8 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
         base_path: Union[str, Path],
         slot_definition: SlotDefinition,
         area: Optional[Union[str, AreaDefinition]],
-        max_cache: Optional[int] = None,
         output_mode: OutputMode = OutputMode.xrimage,
+        cache: Optional[Callable] = None,
     ) -> None:
         """Dataset of satpy products in a local folder.
 
@@ -52,10 +52,10 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
             Definition of satpy files belonging to a single slot.
         area:
             Projection of the resulting image. Optional.
-        max_cache: int, optional
-            Maximum number of images that will be cached.
         output_mode: OutputMode
             Type of the output data.
+        cache: Callable
+            Cache decorator used to cache dataset outputs.
         """
         self._base_path = Path(base_path)
         self._slot_definition = slot_definition
@@ -64,9 +64,8 @@ class SatpyFolderDataset(AttributeDatasetBase[SatpyProductFiles, str, xr.DataArr
 
         super().__init__()
 
-        if max_cache is None:
-            max_cache = 0
-        self._get_image = lru_cache(max_cache)(partial(self._data2image, area=area))
+        _get_image = partial(self._data2image, area=area)
+        self._get_image = cache(_get_image) if cache is not None else _get_image
 
     def _data2image(
         self, item: SatpyProductFiles, area: Optional[Union[str, AreaDefinition]]
