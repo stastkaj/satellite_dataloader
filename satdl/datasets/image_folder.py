@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Union
-from functools import lru_cache, partial
+from typing import Any, Callable, Dict, List, Optional, Union
+from functools import partial
 import logging
 from pathlib import Path
 
@@ -21,7 +21,7 @@ class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
         base_path: Union[str, Path],
         file_mask: Union[str, Parser],
         georef: Optional[Union[str, Path, xr.DataArray]] = None,
-        max_cache: Optional[int] = None,
+        cache: Optional[Callable] = None,
     ) -> None:
         """Dataset of georeferenced images in a local folder.
 
@@ -36,8 +36,8 @@ class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
             should be relatie to base_path
         georef : str or Path or xr.DataArray or None
             external georeference for plain images, optional
-        max_cache: int, optional
-            Maximum number of images that will be cached.
+        cache: Callable
+            Cache decorator used to cache dataset outputs.
         """
         self._base_path = Path(base_path)
         self._file_mask = Parser(file_mask) if not isinstance(file_mask, Parser) else file_mask
@@ -46,9 +46,8 @@ class ImageFolderDataset(AttributeDatasetBase[Path, str, xr.DataArray]):
 
         super().__init__()
 
-        if max_cache is None:
-            max_cache = 0
-        self._get_image = lru_cache(max_cache)(partial(self._data2image, georef=self._georef))
+        _get_image = partial(self._data2image, georef=self._georef)
+        self._get_image = cache(_get_image) if cache is not None else _get_image
 
     def _data2image(
         self, path: Union[str, Path], georef: Optional[Union[str, Path, xr.DataArray]]
